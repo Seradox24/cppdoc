@@ -34,6 +34,7 @@ export const cppActivities = [
     slug: 'tipos-de-datos-y-variables',
     title: 'Tipos de datos y variables',
     description: 'Los datos de un programa y cómo representarlos.',
+    ready: true,
   },
   {
     slug: 'formato-de-variables',
@@ -153,7 +154,10 @@ export const lessons: Lesson[] = [
     href: `/cpp/${activity.slug}`,
     description: activity.description,
     group: 'cpp' as const,
-    status: 'planned' as const,
+    status:
+      'ready' in activity && activity.ready
+        ? ('ready' as const)
+        : ('planned' as const),
     keywords: `${activity.title} ${activity.slug} c++ sin unreal`,
     suggested: 'suggested' in activity && activity.suggested,
   })),

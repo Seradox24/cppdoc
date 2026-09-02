@@ -2458,3 +2458,6 @@ fieldset {
     font-size: 11px;
   }
 }
+/* Published activities share the course's mint status accent. */
+.ready-indicator { width: 6px; height: 6px; border-radius: 50%; background: #a0dfb6; flex-shrink: 0; }
+.curriculum-status.is-ready { color: #a0dfb6; background: #21392a; border-color: #496f55; }

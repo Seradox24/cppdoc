@@ -18,6 +18,9 @@ import {
 export function CourseOverview({ groupId }: { groupId: GroupId }) {
   const group = learningGroups.find((item) => item.id === groupId)!;
   const activities = getGroupLessons(groupId);
+  const available = activities.filter(
+    (activity) => activity.status === 'ready',
+  ).length;
   return (
     <LearningShell group={groupId}>
       <div className="lesson-meta">
@@ -41,7 +44,11 @@ export function CourseOverview({ groupId }: { groupId: GroupId }) {
               ? `${activities.length} actividades`
               : 'Temario por definir'}
           </span>
-          <span>Contenido pendiente · Lo construiremos paso a paso</span>
+          <span>
+            {available > 0
+              ? `${available} disponible${available === 1 ? '' : 's'} · Seguimos construyendo el recorrido`
+              : 'Contenido pendiente · Lo construiremos paso a paso'}
+          </span>
         </div>
       </section>
       {activities.length > 0 ? (
@@ -74,7 +81,13 @@ export function CourseOverview({ groupId }: { groupId: GroupId }) {
                     </strong>
                     <small>{activity.description}</small>
                   </span>
-                  <span className="curriculum-status">Por desarrollar</span>
+                  <span
+                    className={`curriculum-status ${activity.status === 'ready' ? 'is-ready' : ''}`}
+                  >
+                    {activity.status === 'ready'
+                      ? 'Disponible'
+                      : 'Por desarrollar'}
+                  </span>
                   <ArrowRight size={16} />
                 </Link>
               </li>

@@ -197,9 +197,21 @@ export function LearningShell({
                   <Check size={12} className="nav-check" />
                 ) : (
                   <span
-                    className="pending-indicator"
-                    title="Contenido pendiente"
-                    aria-label="Contenido pendiente"
+                    className={
+                      activity.status === 'ready'
+                        ? 'ready-indicator'
+                        : 'pending-indicator'
+                    }
+                    title={
+                      activity.status === 'ready'
+                        ? 'Disponible'
+                        : 'Contenido pendiente'
+                    }
+                    aria-label={
+                      activity.status === 'ready'
+                        ? 'Disponible'
+                        : 'Contenido pendiente'
+                    }
                   />
                 )}
               </Link>

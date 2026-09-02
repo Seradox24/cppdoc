@@ -1,8 +1,12 @@
 import Link from 'next/link';
 import { ArrowRight, Box, Braces, Compass } from 'lucide-react';
-import { cppActivities, learningGroups } from '@/lib/lessons';
+import { getGroupLessons, learningGroups } from '@/lib/lessons';
 
 export function RouteOverview() {
+  const cppLessons = getGroupLessons('cpp');
+  const available = cppLessons.filter(
+    (lesson) => lesson.status === 'ready',
+  ).length;
   return (
     <section id="ruta" className="content-section route-section">
       <div className="section-heading">
@@ -39,7 +43,11 @@ export function RouteOverview() {
                 {index === 0 ? <Braces size={20} /> : <Box size={20} />}
               </span>
               <span className="small-pill neutral">
-                {index === 0 ? 'Temario preparado' : 'Por definir'}
+                {index === 0
+                  ? available
+                    ? 'Ya puedes empezar'
+                    : 'Temario preparado'
+                  : 'Por definir'}
               </span>
             </div>
             <span className="route-number">GRUPO 0{index + 1}</span>
@@ -52,7 +60,7 @@ export function RouteOverview() {
             <div className="route-card-bottom">
               <span>
                 {index === 0
-                  ? `${cppActivities.length} actividades pendientes`
+                  ? `${available} disponible${available === 1 ? '' : 's'} · ${cppLessons.length - available} pendientes`
                   : 'Actividades por definir'}
               </span>
               <ArrowRight size={17} />
