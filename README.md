@@ -57,3 +57,5 @@ Referencias oficiales utilizadas:
 ## Publicación
 
 El proyecto conserva la configuración de Sites en `.openai/hosting.json`. `npm run build` prepara el Worker y los recursos estáticos. El desarrollo local sigue funcionando de forma independiente.
+
+Versión privada: [C++ visual](https://cpp-visual-unreal.seradox30.chatgpt.site). Si cambias de dominio, actualiza `metadataBase` en `app/layout.tsx` para que la imagen de vista previa apunte al origen correcto.

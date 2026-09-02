@@ -6,6 +6,7 @@ const sans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const mono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://cpp-visual-unreal.seradox30.chatgpt.site'),
   title: {
     default: 'C++ visual — Aprende para Unreal Engine',
     template: '%s · C++ visual',
@@ -18,6 +19,20 @@ export const metadata: Metadata = {
     description: 'Entiende el código. Dale vida a tus ideas.',
     locale: 'es_CL',
     type: 'website',
+    images: [
+      {
+        url: '/og.png',
+        width: 1536,
+        height: 1024,
+        alt: 'C++ visual: de la idea al juego',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'C++ visual',
+    description: 'Entiende el código. Dale vida a tus ideas.',
+    images: ['/og.png'],
   },
 };
 
