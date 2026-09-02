@@ -48,8 +48,14 @@ La lección adapta el material de la cartera: instrucciones ordenadas, compartim
 
 - `components/learning/variables-lesson.tsx` compone el explorador, la simulación, los ejercicios con feedback y el programa copiable.
 - `components/learning/variables-lesson.css` mantiene los estilos de la actividad aislados.
-- `lib/variables-lab.ts` contiene las instrucciones de ejemplo, los estados de ejecución y el escape de texto para los literales C++.
+- `lib/variables-lab.ts` genera las instrucciones, los estados de ejecución, los ejercicios, los consejos y el programa completo para cada tipo y valor inicial. También escapa los textos para los literales C++.
 - Los experimentos usan estado React. La actividad se puede marcar como completada con el sistema de progreso existente.
+
+El tipo y los valores viven en `VariablesLesson`. El laboratorio superior y el selector que permanece visible al bajar comparten la selección. La declaración explicada, el paso a paso y el resto de la actividad se actualizan juntos. Cambiar el tipo o su valor inicial reinicia la ejecución, las respuestas y el estado de copia, evitando conservar resultados de otro ejemplo. Cada tipo mantiene el último valor elegido al volver a seleccionarlo.
+
+Los ejemplos de `bool` usan negación lógica y `std::boolalpha`, los de `char` sustituyen caracteres y los de `std::string` reemplazan y concatenan texto. El programa completo reproduce las mismas instrucciones de la simulación. Los consejos y las cuatro preguntas se adaptan al tipo, incluida la diferencia entre una cadena vacía construida por defecto y un tipo fundamental local sin inicializador.
+
+Las comprobaciones de los seis tipos, sus valores editados, la salida y los literales de texto se ejecutan con `node --experimental-strip-types --test tests/variables-lab.test.mjs`.
 
 Los controles no compilan C++. Sus límites son didácticos, no los rangos de los tipos; los diagramas no representan tamaños reales en memoria. Se aclara que `int puntos = 3.8;` descarta la fracción, mientras que las llaves rechazan esa conversión; que las variables locales sin inicializador no empiezan automáticamente en cero; y que los decimales de punto flotante pueden ser aproximados.
 

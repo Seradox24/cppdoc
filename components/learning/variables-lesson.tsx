@@ -20,96 +20,50 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { CompleteLesson, LearningShell } from './learning-shell';
 import {
-  cppStringLiteral,
-  executionLines,
-  executionSteps,
+  createVariableExample,
+  dataTypes as types,
+  defaultLabValues,
+  type DataType,
+  type LabValues,
+  type VariableExample,
 } from '@/lib/variables-lab';
 import { getGroupLessons } from '@/lib/lessons';
 import './variables-lesson.css';
 
 const lessonId = 'cpp-tipos-de-datos-y-variables';
-const types = [
-  {
-    id: 'int',
-    label: 'int',
-    category: 'Números enteros',
-    name: 'monedas',
-    description:
-      'Para contar unidades completas: 0, 12 o −5. No conserva la parte decimal.',
-    example: 'Monedas, vidas o cantidad de objetos.',
-  },
-  {
-    id: 'float',
-    label: 'float',
-    category: 'Números con decimales',
-    name: 'velocidad',
-    description:
-      'Para representar medidas con decimales. La f de 2.5f indica que ese número es un float.',
-    example: 'Una velocidad de 2.5 metros por segundo.',
-  },
-  {
-    id: 'double',
-    label: 'double',
-    category: 'Más precisión habitual',
-    name: 'distancia',
-    description:
-      'También representa decimales. Suele ofrecer más precisión que float. Un literal como 12.75, sin f, es double.',
-    example: 'Una distancia que necesita más precisión.',
-  },
-  {
-    id: 'bool',
-    label: 'bool',
-    category: 'Verdadero o falso',
-    name: 'tieneTarjeta',
-    description:
-      'Solo tiene dos valores: true (verdadero) y false (falso). Sirve para guardar una respuesta de sí o no.',
-    example: '¿Hay una tarjeta en la cartera?',
-  },
-  {
-    id: 'char',
-    label: 'char',
-    category: 'Un carácter básico',
-    name: 'inicial',
-    description:
-      "Para un carácter básico, como 'A' o '7'. Se escribe entre comillas simples. Un emoji no cabe necesariamente en un char.",
-    example: 'La inicial de un nombre o una opción del menú.',
-  },
-  {
-    id: 'string',
-    label: 'std::string',
-    category: 'Texto',
-    name: 'nombre',
-    description:
-      'Guarda una secuencia de caracteres, como un nombre. Usa comillas dobles. Es un tipo de la biblioteca estándar; incluye <string> para usarlo.',
-    example: 'El nombre de la persona: "Ada".',
-  },
-] as const;
-type DataType = (typeof types)[number]['id'];
+type ChangeLabValue = <K extends keyof LabValues>(
+  key: K,
+  value: LabValues[K],
+) => void;
 
-function TypeExplorer() {
-  const [selected, setSelected] = useState<DataType>('int');
-  const [coins, setCoins] = useState(12);
-  const [speed, setSpeed] = useState(2.5);
-  const [distance, setDistance] = useState(12.75);
-  const [hasCard, setHasCard] = useState(true);
-  const [initial, setInitial] = useState('A');
-  const [name, setName] = useState('Ada');
-  const type = types.find((item) => item.id === selected)!;
-  const literals: Record<DataType, string> = {
-    int: String(coins),
-    float: `${speed.toFixed(1)}f`,
-    double: distance.toFixed(2),
-    bool: String(hasCard),
-    char: `'${initial}'`,
-    string: cppStringLiteral(name),
-  };
-  const literal = literals[selected];
-  const displayed =
-    selected === 'string'
-      ? name || '(texto vacío)'
-      : selected === 'char'
-        ? initial
-        : literal;
+function TypeExplorer({
+  selected,
+  values,
+  onSelect: setSelected,
+  onChange,
+  example,
+}: {
+  selected: DataType;
+  values: LabValues;
+  onSelect: (type: DataType) => void;
+  onChange: ChangeLabValue;
+  example: VariableExample;
+}) {
+  const {
+    int: coins,
+    float: speed,
+    double: distance,
+    bool: hasCard,
+    char: initial,
+    string: name,
+  } = values;
+  const setCoins = (value: number) => onChange('int', value);
+  const setSpeed = (value: number) => onChange('float', value);
+  const setDistance = (value: number) => onChange('double', value);
+  const setHasCard = (value: boolean) => onChange('bool', value);
+  const setInitial = (value: string) => onChange('char', value);
+  const setName = (value: string) => onChange('string', value);
+  const { type, literal, displayed } = example;
 
   return (
     <div className="var-lab">
@@ -313,7 +267,8 @@ function TypeExplorer() {
   );
 }
 
-function ExecutionLab() {
+function ExecutionLab({ example }: { example: VariableExample }) {
+  const { lines: executionLines, steps: executionSteps, type } = example;
   const [step, setStep] = useState(0);
   const current = executionSteps[step];
   return (
@@ -350,17 +305,25 @@ function ExecutionLab() {
           </ol>
           <p className="var-fragment-note">
             Fragmento de C++. Para usar <code>std::cout</code>, incluye{' '}
-            <code>{'<iostream>'}</code>. Más abajo tienes el programa completo.
+            <code>{'<iostream>'}</code>.
+            {type.id === 'string' && (
+              <>
+                {' '}
+                Para <code>std::string</code>, incluye también{' '}
+                <code>{'<string>'}</code>.
+              </>
+            )}{' '}
+            Más abajo tienes el programa completo.
           </p>
         </div>
         <div className="var-execution-state">
           <div className={`var-memory-cell ${step === 0 ? 'is-empty' : ''}`}>
             <span className="var-mini-label">ESTADO DE LA VARIABLE</span>
             <div>
-              <code>int</code>
-              <strong>monedas</strong>
+              <code>{type.label}</code>
+              <strong>{type.name}</strong>
             </div>
-            <output aria-label="Valor actual de monedas">
+            <output aria-label={`Valor actual de ${type.name}`}>
               {current.value ?? '—'}
             </output>
             <span>
@@ -420,59 +383,8 @@ function ExecutionLab() {
   );
 }
 
-const questions = [
-  {
-    title: 'Una respuesta de sí o no',
-    prompt:
-      'Quieres guardar si hay una tarjeta. ¿Qué declaración usa el tipo pensado para verdadero o falso?',
-    choices: [
-      'bool tieneTarjeta = true;',
-      'std::string tieneTarjeta = "true";',
-      "char tieneTarjeta = 'S';",
-    ],
-    answer: 0,
-    explanation:
-      'bool expresa directamente verdadero o falso. true es un valor de C++, sin comillas. "true" sería texto y \'S\' sería un carácter.',
-    hint: 'Ese tipo puede guardar información, pero no es el tipo de dos valores true y false. Busca el tipo lógico.',
-  },
-  {
-    title: 'Reemplazar no es sumar',
-    prompt: 'Después de ejecutar estas dos líneas, ¿cuánto vale monedas?',
-    code: 'int monedas = 12;\nmonedas = 5;',
-    choices: ['17', '12', '5'],
-    answer: 2,
-    explanation:
-      'La segunda línea reemplaza 12 por 5. La variable ya existe, así que no repetimos int. Para sumar usaríamos una expresión como monedas + 5.',
-    hint: 'En la segunda línea no hay una suma: se guarda directamente el valor que está a la derecha de =.',
-  },
-  {
-    title: 'El decimal que se pierde',
-    prompt:
-      'Con esta inicialización usando =, ¿qué valor se guarda? El compilador puede advertir sobre la conversión.',
-    code: 'int puntos = 3.8;',
-    choices: ['3.8', '3', '4'],
-    answer: 1,
-    explanation:
-      'Se guarda 3: al convertir este decimal a int se descarta la parte fraccionaria. No se redondea. Con int puntos{3.8};, en cambio, las llaves hacen que esta conversión sea un error.',
-    hint: 'int no conserva fracciones. Esta conversión descarta lo que hay después del punto; no redondea al entero más cercano.',
-  },
-  {
-    title: 'Un dato que debe mantenerse',
-    prompt: '¿Qué ocurre al intentar ejecutar este programa?',
-    code: 'const int maxVidas = 3;\nmaxVidas = 5;',
-    choices: [
-      'maxVidas cambia a 5.',
-      'Se crea otra variable.',
-      'La segunda línea provoca un error de compilación.',
-    ],
-    answer: 2,
-    explanation:
-      'const indica que este dato no se puede modificar después de inicializarlo. El compilador rechaza la asignación, así que este programa no llega a ejecutarse.',
-    hint: 'const protege ese valor frente a cambios posteriores. El compilador comprueba esa regla antes de ejecutar el programa.',
-  },
-] as const;
-
-function VariablesQuiz() {
+function VariablesQuiz({ example }: { example: VariableExample }) {
+  const { questions } = example;
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(
     questions.map(() => null),
@@ -565,7 +477,7 @@ function VariablesQuiz() {
         {solved === questions.length && (
           <p className="var-quiz-success">
             <Check size={18} /> ¡Los cuatro resueltos! Ya distingues tipo,
-            asignación, conversión y constante.
+            asignación y constantes con {example.type.label}.
           </p>
         )}
         <div className="var-quiz-footer">
@@ -591,19 +503,8 @@ function VariablesQuiz() {
   );
 }
 
-const completeProgram = `#include <iostream>
-#include <string>
-
-int main() {
-    std::string nombre = "Ada";
-    int monedas = 12;
-    monedas = monedas + 3;
-
-    std::cout << nombre << " tiene " << monedas << " monedas.\\n";
-    return 0;
-}`;
-
-function CompleteExample() {
+function CompleteExample({ example }: { example: VariableExample }) {
+  const { program: completeProgram } = example;
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>(
     'idle',
   );
@@ -631,7 +532,7 @@ function CompleteExample() {
         <span>
           <Terminal size={14} /> Salida esperada
         </span>
-        <output>Ada tiene 15 monedas.</output>
+        <output>{example.output}</output>
       </div>
       {copyState === 'error' && (
         <p className="var-copy-feedback" aria-live="polite">
@@ -643,7 +544,263 @@ function CompleteExample() {
   );
 }
 
+function VariableExplanation({
+  example,
+  exampleKey,
+}: {
+  example: VariableExample;
+  exampleKey: string;
+}) {
+  const { type, literal, declaration } = example;
+  return (
+    <>
+      <section
+        className="var-section var-anatomy-section"
+        aria-label={`Declaración de ${type.label}`}
+      >
+        <p className="var-anatomy-intro">
+          Leamos una declaración de izquierda a derecha:{' '}
+          <code>{declaration}</code>
+        </p>
+        <div className="var-anatomy" aria-label="Partes de una declaración">
+          <div>
+            <code className="var-color-type">{type.label}</code>
+            <strong>Tipo</strong>
+            <p>Qué clase de dato guardamos: {type.category.toLowerCase()}.</p>
+          </div>
+          <div>
+            <code className="var-color-name">{type.name}</code>
+            <strong>Nombre</strong>
+            <p>Cómo nos referimos al dato.</p>
+          </div>
+          <div>
+            <code>=</code>
+            <strong>Inicialización</strong>
+            <p>Aquí usamos = para darle su primer valor.</p>
+          </div>
+          <div>
+            <code className="var-color-value">{literal}</code>
+            <strong>Valor inicial</strong>
+            <p>El valor que elegiste en el laboratorio.</p>
+          </div>
+          <div>
+            <code>;</code>
+            <strong>Fin de instrucción</strong>
+            <p>Cierra esta declaración.</p>
+          </div>
+        </div>
+        <aside className="var-note">
+          <CircleHelp size={20} />
+          <p>
+            <strong>El tipo se mantiene.</strong> La variable{' '}
+            <code>{type.name}</code> sigue siendo <code>{type.label}</code>{' '}
+            cuando cambia su valor. Elegir otro tipo en el selector carga un
+            ejemplo diferente; no transforma el tipo de esta variable durante la
+            ejecución.
+          </p>
+        </aside>
+      </section>
+      <section
+        id="paso-a-paso"
+        className="var-section"
+        aria-labelledby="var-execution-title"
+      >
+        <div className="var-section-heading">
+          <span>02</span>
+          <div>
+            <h2 id="var-execution-title">
+              El valor cambia, la variable sigue ahí
+            </h2>
+            <p>
+              Programar es dar instrucciones con un orden. A esa secuencia de
+              pasos para resolver una tarea la llamamos{' '}
+              <strong>algoritmo</strong>. {example.introduction}
+            </p>
+          </div>
+        </div>
+        <ExecutionLab key={exampleKey} example={example} />
+        <div className="var-three-ideas">
+          <div>
+            <span>CREAR · {type.label}</span>
+            <code>{declaration}</code>
+            <p>
+              Declaramos el nombre y el tipo, y lo{' '}
+              <strong>inicializamos</strong> con <code>{literal}</code>.
+            </p>
+          </div>
+          <div>
+            <span>CAMBIAR · {type.label}</span>
+            <code>{example.lines[1]}</code>
+            <p>
+              <strong>Asignamos</strong> <code>{example.assignedLiteral}</code>{' '}
+              a la variable que ya existe.
+            </p>
+          </div>
+          <div>
+            <span>LEER · {type.label}</span>
+            <code>{example.lines[3]}</code>
+            <p>Consultamos su valor para mostrarlo, sin cambiarlo.</p>
+          </div>
+        </div>
+        <aside className="var-note">
+          <Lightbulb size={20} />
+          <p>
+            <code>{example.lines[2]}</code>
+            <br />
+            {example.operationNote} Aquí <code>=</code> significa{' '}
+            <strong>asignar</strong>. Para comparar igualdad se usa{' '}
+            <code>==</code>; lo veremos en operadores.
+          </p>
+        </aside>
+      </section>
+      <section className="var-section" aria-labelledby="var-habits-title">
+        <div className="var-section-heading">
+          <span>
+            <TriangleAlert size={20} />
+          </span>
+          <div>
+            <h2 id="var-habits-title">
+              Cuatro detalles al trabajar con <code>{type.label}</code>
+            </h2>
+            <p>
+              Las reglas de inicialización y los errores frecuentes también
+              dependen del tipo de dato.
+            </p>
+          </div>
+        </div>
+        <div className="var-habits">
+          {example.habits.map((habit) => (
+            <div key={habit.label}>
+              <span>{habit.label}</span>
+              <h3>{habit.title}</h3>
+              <pre>
+                <code>{habit.code}</code>
+              </pre>
+              <p>{habit.explanation}</p>
+            </div>
+          ))}
+        </div>
+        <p className="var-footnote">
+          Los tamaños y rangos exactos dependen del tipo y de la implementación.
+          Por ahora, piensa en el significado del dato; estudiaremos la memoria
+          más adelante.
+        </p>
+      </section>
+      <section
+        id="practicar"
+        className="var-section"
+        aria-labelledby="var-practice-title"
+      >
+        <div className="var-section-heading">
+          <span>03</span>
+          <div>
+            <h2 id="var-practice-title">
+              Tu turno: practica con <code>{type.label}</code>
+            </h2>
+            <p>
+              Cuatro situaciones para este tipo de dato. Cada respuesta te
+              explica el motivo, y puedes repetirlas sin límite.
+            </p>
+          </div>
+        </div>
+        <VariablesQuiz key={exampleKey} example={example} />
+      </section>
+      <section className="var-section" aria-labelledby="var-program-title">
+        <div className="var-section-heading">
+          <span>
+            <Terminal size={20} />
+          </span>
+          <div>
+            <h2 id="var-program-title">
+              Tu ejemplo de <code>{type.label}</code>, listo para compilar
+            </h2>
+            <p>
+              Este programa completo usa el mismo valor inicial y las mismas
+              instrucciones del paso a paso. Puedes copiarlo en un archivo{' '}
+              <code>main.cpp</code> y compilarlo con un compilador de C++.
+            </p>
+          </div>
+        </div>
+        <CompleteExample key={exampleKey} example={example} />
+        <dl className="var-code-guide">
+          <div>
+            <dt>
+              <code>#include</code>
+            </dt>
+            <dd>
+              La cabecera <code>iostream</code> permite escribir en la consola.
+              {type.id === 'string' && (
+                <>
+                  {' '}
+                  También incluimos <code>string</code> para usar{' '}
+                  <code>std::string</code>.
+                </>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <code>main()</code>
+            </dt>
+            <dd>
+              Es el punto de entrada de este programa. Su <code>int</code> es el
+              tipo de su resultado; la variable del ejemplo sigue siendo{' '}
+              <code>{type.label}</code>. <code>return 0;</code> indica que
+              terminó correctamente.
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <code>std::cout</code>
+            </dt>
+            <dd>
+              Envía el valor de <code>{type.name}</code> a la consola.{' '}
+              <code>{"'\\n'"}</code> añade un salto de línea.
+              {type.id === 'bool' && (
+                <>
+                  {' '}
+                  Usamos <code>std::boolalpha</code> para mostrar{' '}
+                  <code>true</code> o <code>false</code>.
+                </>
+              )}
+              {(type.id === 'float' || type.id === 'double') && (
+                <>
+                  {' '}
+                  La consola puede omitir ceros finales; el tipo de la variable
+                  no cambia.
+                </>
+              )}
+            </dd>
+          </div>
+        </dl>
+        <div className="var-next-concept">
+          <Lightbulb size={22} />
+          <div>
+            <h3>Después: reunir estas instrucciones en una función</h3>
+            <p>
+              Una función reúne instrucciones bajo un nombre. Puede recibir
+              datos como <code>{type.name}</code>, hacer una tarea y devolver un
+              resultado. Lo veremos en su propia actividad.
+            </p>
+            <Link href="/cpp/funciones-y-flujo-de-ejecucion">
+              Funciones y flujo de ejecución <ArrowRight size={14} />
+              <span>Contenido pendiente</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
 export function VariablesLesson() {
+  const [selected, setSelected] = useState<DataType>('int');
+  const [values, setValues] = useState<LabValues>(defaultLabValues);
+  const example = createVariableExample(selected, values);
+  const exampleKey = JSON.stringify([selected, values[selected]]);
+  const changeValue: ChangeLabValue = (key, value) =>
+    setValues((previous) => ({ ...previous, [key]: value }));
+
   const activities = getGroupLessons('cpp');
   const index = activities.findIndex((lesson) => lesson.id === lessonId);
   return (
@@ -692,267 +849,43 @@ export function VariablesLesson() {
               </p>
             </div>
           </div>
-          <TypeExplorer />
+          <TypeExplorer
+            selected={selected}
+            values={values}
+            onSelect={setSelected}
+            onChange={changeValue}
+            example={example}
+          />
           <p className="var-footnote">
             Los rangos y saltos de los controles son solo para practicar; no
             representan los límites de cada tipo.
           </p>
-          <p className="var-anatomy-intro">
-            Leamos una declaración de izquierda a derecha:{' '}
-            <code>int monedas = 12;</code>
-          </p>
-          <div className="var-anatomy" aria-label="Partes de una declaración">
-            <div>
-              <code className="var-color-type">int</code>
-              <strong>Tipo</strong>
-              <p>Qué clase de dato guardamos.</p>
-            </div>
-            <div>
-              <code className="var-color-name">monedas</code>
-              <strong>Nombre</strong>
-              <p>Cómo nos referimos al dato.</p>
-            </div>
-            <div>
-              <code>=</code>
-              <strong>Inicialización</strong>
-              <p>Aquí usamos = para darle su primer valor.</p>
-            </div>
-            <div>
-              <code className="var-color-value">12</code>
-              <strong>Valor</strong>
-              <p>El dato concreto con el que comienza.</p>
-            </div>
-            <div>
-              <code>;</code>
-              <strong>Fin de instrucción</strong>
-              <p>Cierra esta declaración.</p>
-            </div>
-          </div>
-          <aside className="var-note">
-            <CircleHelp size={20} />
-            <p>
-              <strong>El tipo se mantiene.</strong> Una variable{' '}
-              <code>int</code> no se convierte en texto al cambiar su valor. En
-              el laboratorio, cada tipo muestra una variable distinta. El valor
-              puede cambiar; el nombre y el tipo de esa variable permanecen.
-            </p>
-          </aside>
         </section>
-        <section
-          id="paso-a-paso"
-          className="var-section"
-          aria-labelledby="var-execution-title"
-        >
-          <div className="var-section-heading">
-            <span>02</span>
-            <div>
-              <h2 id="var-execution-title">
-                El valor cambia, la variable sigue ahí
-              </h2>
-              <p>
-                Programar es dar instrucciones con un orden. A esa secuencia de
-                pasos para resolver una tarea la llamamos{' '}
-                <strong>algoritmo</strong>. Aquí vamos a crear un contador,
-                cambiarlo y mostrarlo, una línea a la vez.
-              </p>
-            </div>
-          </div>
-          <ExecutionLab />
-          <div className="var-three-ideas">
-            <div>
-              <span>CREAR</span>
-              <code>int monedas = 10;</code>
-              <p>
-                Declaramos el nombre y el tipo, y lo{' '}
-                <strong>inicializamos</strong> con 10.
-              </p>
-            </div>
-            <div>
-              <span>CAMBIAR</span>
-              <code>monedas = 15;</code>
-              <p>
-                <strong>Asignamos</strong> un valor a la variable que ya existe.
-              </p>
-            </div>
-            <div>
-              <span>LEER</span>
-              <code>{'std::cout << monedas;'}</code>
-              <p>Consultamos su valor para mostrarlo, sin cambiarlo.</p>
-            </div>
-          </div>
-          <aside className="var-note">
-            <Lightbulb size={20} />
-            <p>
-              En <code>monedas = monedas + 2;</code>, primero se calcula el lado
-              derecho y después se guarda el resultado a la izquierda. Aquí{' '}
-              <code>=</code> significa <strong>asignar</strong>. Para comparar
-              igualdad se usa <code>==</code>; lo veremos en operadores.
-            </p>
-          </aside>
-        </section>
-        <section className="var-section" aria-labelledby="var-habits-title">
-          <div className="var-section-heading">
-            <span>
-              <TriangleAlert size={20} />
-            </span>
-            <div>
-              <h2 id="var-habits-title">
-                Cuatro detalles que evitan confusiones
-              </h2>
-              <p>
-                No necesitas memorizar todos los tipos. Empieza eligiendo qué
-                representa tu dato y dándole un valor claro.
-              </p>
-            </div>
-          </div>
-          <div className="var-habits">
-            <div>
-              <span>01 / EMPIEZA CON UN VALOR</span>
-              <h3>Inicializa antes de leer</h3>
-              <pre>
-                <code>{'int vidas = 3;\nint puntos{}; // empieza en 0'}</code>
-              </pre>
-              <p>
-                Una variable local como <code>int puntos;</code>, dentro de una
-                función, no empieza automáticamente en cero. No leas su valor
-                sin inicializarla o asignarle uno antes.
-              </p>
-            </div>
-            <div>
-              <span>02 / PROTEGE LO QUE NO CAMBIA</span>
-              <h3>
-                Usa <code>const</code>
-              </h3>
-              <pre>
-                <code>{'const int maxVidas = 3;'}</code>
-              </pre>
-              <p>
-                Este valor se fija al inicializarlo. Intentar después{' '}
-                <code>maxVidas = 5;</code> provoca un error de compilación.
-              </p>
-            </div>
-            <div>
-              <span>03 / UN TIPO TIENE LÍMITES</span>
-              <h3>Cuida las conversiones</h3>
-              <pre>
-                <code>
-                  {'int puntos = 3.8; // guarda 3\nint puntos{3.8};  // error'}
-                </code>
-              </pre>
-              <p>
-                Son dos alternativas, no líneas para usar juntas. Con{' '}
-                <code>=</code> se descarta la fracción. Las llaves{' '}
-                <code>{'{}'}</code> rechazan esta conversión que pierde
-                información. Tampoco caben números infinitamente grandes en un{' '}
-                <code>int</code>.
-              </p>
-            </div>
-            <div>
-              <span>04 / COMILLAS Y PUNTO DECIMAL</span>
-              <h3>Escribe cada valor con su formato</h3>
-              <pre>
-                <code>
-                  {
-                    'char inicial = \'A\';\nstd::string nombre = "Ada";\nfloat velocidad = 2.5f;'
-                  }
-                </code>
-              </pre>
-              <p>
-                Un carácter básico lleva comillas simples; el texto, dobles. En
-                el código, escribe los decimales con <strong>punto</strong>.{' '}
-                <code>float</code> y <code>double</code> aproximan muchos
-                decimales; más precisión no significa exactitud total.
-              </p>
-            </div>
-          </div>
-          <p className="var-footnote">
-            Los tamaños y rangos exactos dependen del tipo y de la
-            implementación. Por ahora, piensa en el significado del dato;
-            estudiaremos la memoria más adelante.
-          </p>
-        </section>
-        <section
-          id="practicar"
-          className="var-section"
-          aria-labelledby="var-practice-title"
-        >
-          <div className="var-section-heading">
-            <span>03</span>
-            <div>
-              <h2 id="var-practice-title">
-                Tu turno: predice antes de responder
-              </h2>
-              <p>
-                Cuatro situaciones cortas. Cada respuesta te explica el motivo,
-                y puedes repetirlas sin límite.
-              </p>
-            </div>
-          </div>
-          <VariablesQuiz />
-        </section>
-        <section className="var-section" aria-labelledby="var-program-title">
-          <div className="var-section-heading">
-            <span>
-              <Terminal size={20} />
-            </span>
-            <div>
-              <h2 id="var-program-title">Del experimento a un programa real</h2>
-              <p>
-                Este ejemplo es C++ estándar. Puedes copiarlo en un archivo{' '}
-                <code>main.cpp</code> y compilarlo con un compilador de C++.
-                Antes de ejecutarlo, intenta predecir qué dirá la consola.
-              </p>
-            </div>
-          </div>
-          <CompleteExample />
-          <dl className="var-code-guide">
-            <div>
-              <dt>
-                <code>#include</code>
-              </dt>
-              <dd>
-                Nos permite usar las herramientas de cada cabecera:{' '}
-                <code>iostream</code> para la consola y <code>string</code> para
-                el texto.
-              </dd>
-            </div>
-            <div>
-              <dt>
-                <code>main()</code>
-              </dt>
-              <dd>
-                Es el punto de entrada de este programa. Las instrucciones van
-                dentro de sus llaves. <code>return 0;</code> indica que terminó
-                correctamente.
-              </dd>
-            </div>
-            <div>
-              <dt>
-                <code>std::cout</code>
-              </dt>
-              <dd>
-                Envía los datos a la consola. Cada <code>{'<<'}</code> añade una
-                parte y <code>{'\n'}</code> produce un salto de línea.
-              </dd>
-            </div>
-          </dl>
-          <div className="var-next-concept">
-            <Lightbulb size={22} />
-            <div>
-              <h3>¿Y las funciones del ejemplo de la cartera?</h3>
-              <p>
-                Una función reúne instrucciones bajo un nombre. Puede recibir
-                datos, hacer una tarea y devolver un resultado. La veremos en su
-                propia actividad, cuando estas variables ya te resulten
-                familiares.
-              </p>
-              <Link href="/cpp/funciones-y-flujo-de-ejecucion">
-                Funciones y flujo de ejecución <ArrowRight size={14} />
-                <span>Contenido pendiente</span>
-              </Link>
-            </div>
-          </div>
-        </section>
+        <div className="var-linked-type">
+          <label htmlFor="var-lesson-type">Tipo para toda la lección</label>
+          <select
+            id="var-lesson-type"
+            value={selected}
+            onChange={(event) => setSelected(event.target.value as DataType)}
+          >
+            {types.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+          <code>
+            {example.type.name} = {example.literal}
+          </code>
+          <a href="#explorar-tipos">
+            Cambiar valor inicial <ArrowRight size={14} />
+          </a>
+        </div>
+        <p className="var-linked-note">
+          El tipo y el valor inicial se comparten con todos los ejemplos. Al
+          cambiarlos, la ejecución y los ejercicios comienzan de nuevo.
+        </p>
+        <VariableExplanation example={example} exampleKey={exampleKey} />
         <div className="var-takeaway">
           <span className="var-mini-label">QUÉDATE CON ESTA IDEA</span>
           <p>

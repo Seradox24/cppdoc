@@ -451,6 +451,8 @@
 }
 .var-anatomy code {
   font-size: 1.1rem;
+  overflow-wrap: anywhere;
+  max-width: 100%;
 }
 .var-anatomy strong {
   font-size: 0.875rem;
@@ -591,6 +593,7 @@
     monospace;
   color: #c6f2d3;
   margin: 8px 0;
+  overflow-wrap: anywhere;
 }
 .var-memory-cell > span:last-child {
   font-size: 0.8125rem;
@@ -1103,5 +1106,104 @@
 @media (prefers-reduced-motion: reduce) {
   .var-measure > div {
     transition: none;
+  }
+}
+
+/* Keep the selected type in reach while reading the linked examples. */
+.var-linked-type {
+  position: sticky;
+  top: 65px;
+  z-index: 15;
+  display: grid;
+  grid-template-columns: auto 130px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 17px;
+  background: #1a2c20;
+  border: 1px solid #688773;
+  border-radius: 9px;
+  box-shadow: 0 8px 24px #080e0a66;
+}
+.var-linked-type label {
+  font-size: 0.875rem;
+  color: #d0e8d8;
+}
+.var-linked-type select {
+  min-height: 40px;
+  width: 100%;
+  padding: 7px 10px;
+  color: #d8f1e1;
+  border: 1px solid #718e7a;
+  border-radius: 5px;
+  background: #102017;
+  font:
+    0.9375rem var(--font-geist-mono),
+    monospace;
+}
+.var-linked-type > code {
+  color: #c4e6d0;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.var-linked-type > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--var-mint);
+  font-size: 0.875rem;
+}
+.variables-lesson .var-linked-note {
+  margin: 13px 0 26px;
+  font-size: 0.875rem;
+  color: #a7b9ad;
+}
+.variables-lesson .var-anatomy-section {
+  margin-top: 0;
+}
+.variables-lesson .var-anatomy-intro code {
+  overflow-wrap: anywhere;
+}
+.variables-lesson section {
+  scroll-margin-top: 155px;
+}
+.var-three-ideas code {
+  overflow-wrap: anywhere;
+}
+.var-note code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1120px) {
+  .var-linked-type {
+    grid-template-columns: minmax(0, 1fr) 140px;
+    gap: 6px 12px;
+  }
+  .var-linked-type > a {
+    justify-self: end;
+    text-align: right;
+    font-size: 0.8125rem;
+  }
+  .var-linked-type > code {
+    font-size: 0.8125rem;
+  }
+  .variables-lesson section {
+    scroll-margin-top: 185px;
+  }
+}
+@media (max-width: 720px) {
+  .var-linked-type {
+    top: 59px;
+  }
+}
+@media (max-width: 450px) {
+  .var-linked-type {
+    padding: 11px 12px;
+    grid-template-columns: minmax(0, 1fr) 122px;
+    gap: 7px;
+  }
+  .var-linked-type label {
+    font-size: 0.875rem;
+    line-height: 1.4;
   }
 }
