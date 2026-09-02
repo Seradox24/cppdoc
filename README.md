@@ -1,6 +1,6 @@
 # C++ visual
 
-Cuaderno visual en español para aprender C++ en el contexto de Unreal Engine. Incluye dos páginas completas y una navegación preparada para futuros contenidos.
+Cuaderno visual en español para aprender primero C++ y después aplicarlo a Unreal Engine. La bienvenida es independiente; el aprendizaje se organiza en dos grupos.
 
 ## Desarrollo local
 
@@ -27,21 +27,28 @@ npm run lint
 - SVG para la proyección isométrica del laboratorio, actualizada con estado React.
 - `localStorage` para el progreso del navegador. No necesita base de datos, credenciales ni Unreal instalado.
 
-## Contenido inicial
+## Grupos y páginas
 
-- `/`: bienvenida, ruta de aprendizaje y laboratorio de escala de un Actor.
-- `/introduccion`: lenguaje frente a API del motor, diagrama C++ / Blueprint / Actor, declaración interactiva, ejemplos `.h` y `.cpp`, y una pregunta con retroalimentación.
+- `/`: bienvenida, ruta de aprendizaje y laboratorio original de escala de un Actor.
+- `/cpp`: temario de **Introducción a C++ sin Unreal Engine**, con 19 actividades ordenadas.
+- `/cpp/[slug]`: página individual de cada actividad, pendiente de contenido, con anterior/siguiente.
+- `/unreal-engine`: grupo **C++ en Unreal Engine**, reservado para definir actividades más adelante.
+- `/introduccion`: redirección compatible hacia `/cpp/introduccion`.
 
-Los controles funcionan con teclado y táctil. El buscador se abre desde la cabecera o con Ctrl/Cmd + K. El progreso se marca manualmente y se puede desmarcar. Los temas pendientes están identificados y no navegan a páginas vacías.
+El buscador (Ctrl/Cmd + K) incluye grupos y páginas pendientes, y señala su estado. Los grupos del menú son plegables. Solo el contenido publicado cuenta para el progreso; una página pendiente no puede marcarse como completada. El progreso de la bienvenida se conserva y la introducción antigua no marca la nueva actividad como leída.
+
+Se añadieron seis actividades sugeridas: entorno y compilación, entrada y salida, strings y vectores, parámetros y retorno, alcance y tiempo de vida, y punteros y memoria. Se distinguen en el temario.
+
+La introducción original, que mezclaba C++ con Unreal, permanece en `components/learning/introduction.tsx` como borrador sin publicar. Se podrá adaptar cuando se desarrolle el grupo de Unreal. Las páginas nuevas no incluyen lecciones ni ejercicios desarrollados todavía.
 
 ## Cómo añadir una lección
 
-1. Añade su identificador al tipo `LessonId` y sus metadatos a `lessons` en `lib/lessons.ts`.
-2. Crea `app/tu-leccion/page.tsx` siguiendo `app/introduccion/page.tsx`. Declara sus metadatos y utiliza `LearningShell` con el identificador nuevo.
-3. Crea el contenido en `components/learning/`. Usa la introducción como patrón: concepto breve, ejemplo visual, explicación y comprobación.
-4. Usa `CompleteLesson` para registrar el progreso. Retira el tema de `upcomingGroups` cuando esté disponible y actualiza los textos de la ruta de bienvenida.
-5. Mantén los experimentos en componentes independientes. `ScaleLab` es un ejemplo de estado, control, código y visualización vinculados.
-6. Verifica tipos y compilación antes de publicar.
+1. Para añadir una actividad de C++ básico, agrega su `slug`, título y descripción a `cppActivities` en `lib/lessons.ts`. Su posición determina el orden del temario, menú y navegación. El identificador, la ruta y el contador se derivan automáticamente.
+2. `app/cpp/[slug]/page.tsx` crea sus rutas y usa `PendingLesson` como plantilla. Las rutas desconocidas devuelven 404.
+3. Cuando desarrollemos un tema, crea su componente en `components/learning/` y selecciónalo desde la ruta en lugar de `PendingLesson`. Envuélvelo en `LearningShell` y utiliza `CompleteLesson` al final.
+4. Cambia el estado de esa actividad a `ready` al publicar su contenido; `publishedLessons` determina qué cuenta para el progreso. El estado actual de las actividades es `planned`.
+5. Para ampliar la etapa de Unreal, añade sus actividades al catálogo `lessons`, amplía `LessonId` y crea su ruta. Para futuros grupos, amplía `learningGroups` y crea su página con `CourseOverview`.
+6. Mantén los experimentos en componentes independientes. `ScaleLab` es un ejemplo de estado, control, código y visualización vinculados. Verifica tipos y compilación antes de publicar.
 
 Los tokens de color, tipografía y tamaños adaptables están centralizados en `app/globals.css`.
 

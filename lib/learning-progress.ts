@@ -1,7 +1,7 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
-import { lessons, type LessonId } from './lessons';
+import { publishedLessons, type LessonId } from './lessons';
 
 const key = 'cpp-visual.progress.v1';
 const changeEvent = 'cpp-visual:progress';
@@ -21,7 +21,7 @@ function readSnapshot(): Snapshot {
         saved = [];
       }
       const completed = Array.isArray(saved)
-        ? lessons
+        ? publishedLessons
             .filter((item) => saved.includes(item.id))
             .map((item) => item.id)
         : [];
@@ -45,6 +45,7 @@ function subscribe(callback: () => void) {
 }
 
 function toggle(id: LessonId) {
+  if (!publishedLessons.some((item) => item.id === id)) return;
   const current = readSnapshot();
   const completed = current.completed.includes(id)
     ? current.completed.filter((item) => item !== id)

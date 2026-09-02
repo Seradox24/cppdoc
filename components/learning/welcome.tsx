@@ -5,11 +5,9 @@ import {
   ArrowUpRight,
   BookOpen,
   Box,
-  Braces,
   Check,
   Clock3,
   Code2,
-  Compass,
   FlaskConical,
   Layers3,
   MousePointer2,
@@ -18,6 +16,7 @@ import {
 import { buttonVariants } from '@/components/ui/button';
 import { CompleteLesson } from './learning-shell';
 import { ScaleLab } from './scale-lab';
+import { RouteOverview } from './route-overview';
 
 export function Welcome() {
   return (
@@ -42,14 +41,14 @@ export function Welcome() {
             <span>Dale vida a tus ideas.</span>
           </h1>
           <p>
-            Tu primer paso en C++ para Unreal Engine.
+            Primero entiende C++. Después, llévalo a Unreal Engine.
             <br className="desktop-break" /> Una guía visual para aprender,
             experimentar y entender
             <br className="desktop-break" /> qué pasa detrás de cada línea.
           </p>
           <div className="hero-actions">
             <Link
-              href="/introduccion"
+              href="/cpp/introduccion"
               className={`${buttonVariants()} primary-link`}
             >
               Empezar a aprender <ArrowRight size={16} />
@@ -162,69 +161,7 @@ export function Welcome() {
         </div>
         <ScaleLab />
       </section>
-      <section id="ruta" className="content-section route-section">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow section-eyebrow">
-              EL CAMINO, PASO A PASO
-            </div>
-            <h2>Tu ruta de aprendizaje</h2>
-            <p>Primero las bases. Después, las posibilidades.</p>
-          </div>
-          <span className="muted route-count">2 lecciones disponibles</span>
-        </div>
-        <div className="route-cards">
-          <Link href="/" className="route-card current">
-            <div className="route-card-top">
-              <span className="route-icon">
-                <Compass size={20} />
-              </span>
-              <span className="small-pill">Estás aquí</span>
-            </div>
-            <span className="route-number">01 / EL PUNTO DE PARTIDA</span>
-            <h3>Bienvenida</h3>
-            <p>Conoce la guía y descubre una nueva forma de aprender.</p>
-            <div className="route-card-bottom">
-              <span>
-                <Clock3 size={12} /> 4 min
-              </span>
-              <ArrowRight size={17} />
-            </div>
-          </Link>
-          <Link href="/introduccion" className="route-card">
-            <div className="route-card-top">
-              <span className="route-icon blue">
-                <Braces size={20} />
-              </span>
-              <span className="small-pill neutral">Disponible</span>
-            </div>
-            <span className="route-number">02 / ENTENDER EL LENGUAJE</span>
-            <h3>Introducción a C++</h3>
-            <p>Qué es C++ y cómo se conecta con el mundo de Unreal.</p>
-            <div className="route-card-bottom">
-              <span>
-                <Clock3 size={12} /> 8 min
-              </span>
-              <ArrowRight size={17} />
-            </div>
-          </Link>
-          <div className="route-card future-card">
-            <div className="route-card-top">
-              <span className="route-icon">
-                <Layers3 size={20} />
-              </span>
-              <span className="small-pill neutral">Próximamente</span>
-            </div>
-            <span className="route-number">03 / CONSTRUIR LAS BASES</span>
-            <h3>Fundamentos de C++</h3>
-            <p>Variables, decisiones y funciones. Las piezas de tu juego.</p>
-            <div className="route-card-bottom">
-              <span>El siguiente capítulo</span>
-              <span className="future-dot" />
-            </div>
-          </div>
-        </div>
-      </section>
+      <RouteOverview />
       <aside className="friendly-note">
         <span className="note-icon">
           <BookOpen size={20} />
@@ -239,9 +176,9 @@ export function Welcome() {
       </aside>
       <div className="lesson-bottom">
         <CompleteLesson id="bienvenida" />
-        <Link href="/introduccion" className="next-lesson">
+        <Link href="/cpp" className="next-lesson">
           <span>
-            <small>SIGUIENTE LECCIÓN</small>Introducción a C++
+            <small>PRIMER GRUPO</small>C++ sin Unreal Engine
           </span>
           <ArrowUpRight size={22} />
         </Link>

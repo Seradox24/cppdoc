@@ -11,7 +11,6 @@ import {
 import {
   ArrowUpRight,
   BookOpen,
-  Box,
   Check,
   ChevronRight,
   Code2,
@@ -31,7 +30,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { lessons, sources, upcomingGroups, type LessonId } from '@/lib/lessons';
+import {
+  lessons,
+  learningGroups,
+  publishedLessons,
+  getGroupLessons,
+  sources,
+  type LessonId,
+  type GroupId,
+} from '@/lib/lessons';
 import { useLearningProgress } from '@/lib/learning-progress';
 
 const ProgressContext = createContext<{
@@ -42,6 +49,7 @@ const ProgressContext = createContext<{
 export function CompleteLesson({ id }: { id: LessonId }) {
   const { completed, toggle } = useContext(ProgressContext);
   const done = completed.includes(id);
+  if (!publishedLessons.some((item) => item.id === id)) return null;
   return (
     <Button
       className="complete-button"
@@ -57,16 +65,21 @@ export function CompleteLesson({ id }: { id: LessonId }) {
 
 export function LearningShell({
   lesson,
+  group,
   children,
 }: {
-  lesson: LessonId;
+  lesson?: LessonId;
+  group?: GroupId;
   children: ReactNode;
 }) {
   const { completed, storageAvailable, toggle } = useLearningProgress();
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const current = lessons.find((item) => item.id === lesson)!;
+  const current = lessons.find((item) => item.id === lesson);
+  const activeGroup = learningGroups.find(
+    (item) => item.id === (current?.group ?? group),
+  );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -84,7 +97,21 @@ export function LearningShell({
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();
-  const results = lessons.filter((item) =>
+  const searchItems = [
+    ...lessons.map((item) => ({
+      ...item,
+      context: item.group
+        ? learningGroups.find((g) => g.id === item.group)!.shortTitle
+        : 'Inicio',
+    })),
+    ...learningGroups.map((item) => ({
+      ...item,
+      keywords: item.title,
+      status: 'group',
+      context: 'Grupo de aprendizaje',
+    })),
+  ];
+  const results = searchItems.filter((item) =>
     normalize(`${item.title} ${item.description} ${item.keywords}`).includes(
       normalize(query),
     ),
@@ -107,49 +134,80 @@ export function LearningShell({
         </span>
       </Link>
       <div className="workspace-tag">
-        <Box size={15} />
-        <span>Unreal Engine</span>
-        <span className="version-tag">UE 5</span>
+        <Code2 size={15} />
+        <span>C++ → Unreal Engine</span>
+        <span className="version-tag">RUTA</span>
       </div>
       <nav aria-label="Ruta de aprendizaje" className="lesson-nav">
-        <div className="nav-label">
-          EMPIEZA AQUÍ <span>{String(lessons.length).padStart(2, '0')}</span>
-        </div>
-        {lessons.map((item, index) => (
-          <Link
+        <div className="nav-label">TU PUNTO DE PARTIDA</div>
+        {lessons
+          .filter((item) => item.group === null)
+          .map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              onClick={() => setMenuOpen(false)}
+              className={`nav-item ${lesson === item.id ? 'active' : ''}`}
+              aria-current={lesson === item.id ? 'page' : undefined}
+            >
+              <Compass size={17} />
+              <span>{item.title}</span>
+              {completed.includes(item.id) ? (
+                <Check className="nav-check" size={14} />
+              ) : lesson === item.id ? (
+                <span className="active-dot" />
+              ) : null}
+            </Link>
+          ))}
+        {learningGroups.map((item, index) => (
+          <details
+            className={`nav-group course-nav-group ${activeGroup?.id === item.id ? 'current-group' : ''}`}
             key={item.id}
-            href={item.href}
-            onClick={() => setMenuOpen(false)}
-            className={`nav-item ${lesson === item.id ? 'active' : ''}`}
-            aria-current={lesson === item.id ? 'page' : undefined}
+            open
           >
-            {index === 0 ? <Compass size={17} /> : <FileCode2 size={17} />}
-            <span>{item.title}</span>
-            {completed.includes(item.id) ? (
-              <Check className="nav-check" size={14} />
-            ) : lesson === item.id ? (
-              <span className="active-dot" />
-            ) : (
-              <span className="nav-index">0{index + 1}</span>
-            )}
-          </Link>
-        ))}
-        {upcomingGroups.map((group) => (
-          <div className="nav-group" key={group.title}>
-            <div className="nav-label">{group.title}</div>
-            {group.items.map((title) => (
-              <div
-                key={title}
-                className="nav-item upcoming"
-                aria-disabled="true"
-                title="Próximamente"
+            <summary>
+              <span className="group-number">0{index + 1}</span>
+              <span>{item.title}</span>
+              <ChevronRight size={13} />
+            </summary>
+            <Link
+              href={item.href}
+              className={`nav-item group-overview-link ${!lesson && activeGroup?.id === item.id ? 'active' : ''}`}
+              aria-current={
+                !lesson && activeGroup?.id === item.id ? 'page' : undefined
+              }
+              onClick={() => setMenuOpen(false)}
+            >
+              <BookOpen size={14} />
+              <span>{item.id === 'cpp' ? 'Ver temario' : 'Próxima etapa'}</span>
+            </Link>
+            {getGroupLessons(item.id).map((activity, activityIndex) => (
+              <Link
+                key={activity.id}
+                href={activity.href}
+                className={`nav-item activity-nav ${lesson === activity.id ? 'active' : ''}`}
+                aria-current={lesson === activity.id ? 'page' : undefined}
+                onClick={() => setMenuOpen(false)}
               >
-                <span className="future-dot" />
-                <span>{title}</span>
-                <span className="future-label">Pronto</span>
-              </div>
+                <span className="nav-index">
+                  {String(activityIndex + 1).padStart(2, '0')}
+                </span>
+                <span>{activity.title}</span>
+                {completed.includes(activity.id) ? (
+                  <Check size={12} className="nav-check" />
+                ) : (
+                  <span
+                    className="pending-indicator"
+                    title="Contenido pendiente"
+                    aria-label="Contenido pendiente"
+                  />
+                )}
+              </Link>
             ))}
-          </div>
+            {getGroupLessons(item.id).length === 0 && (
+              <p className="nav-empty-note">Actividades por definir</p>
+            )}
+          </details>
         ))}
       </nav>
       <div className="sidebar-bottom">
@@ -158,21 +216,25 @@ export function LearningShell({
             <Flag size={14} /> Tu progreso
           </span>
           <span>
-            {completed.length} / {lessons.length}
+            {completed.length} / {publishedLessons.length}
           </span>
         </div>
         <Progress
-          value={(completed.length / lessons.length) * 100}
+          value={
+            publishedLessons.length
+              ? (completed.length / publishedLessons.length) * 100
+              : 0
+          }
           aria-label="Progreso de las lecciones disponibles"
         />
         <p>
           {storageAvailable
-            ? 'Guardado en este navegador'
+            ? 'Solo contenido publicado · Guardado aquí'
             : 'Disponible solo durante esta sesión'}
         </p>
         <div className="build-note">
           <span className="active-dot" /> Un cuaderno en construcción{' '}
-          <span>v0.1</span>
+          <span>v0.2</span>
         </div>
       </div>
     </>
@@ -198,9 +260,11 @@ export function LearningShell({
                 <Menu />
               </Button>
               <BookOpen size={15} />
-              <span>Empieza aquí</span>
+              <span title={activeGroup?.title}>
+                {activeGroup?.shortTitle ?? 'Inicio'}
+              </span>
               <ChevronRight size={13} />
-              <strong>{current.title}</strong>
+              <strong>{current?.title ?? 'Temario'}</strong>
             </div>
             <div className="topbar-actions">
               <Button
@@ -214,14 +278,16 @@ export function LearningShell({
                   <Command size={10} /> K
                 </kbd>
               </Button>
-              <a
-                className="docs-link"
-                href={sources.quickStart}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Docs de Unreal <ArrowUpRight size={14} />
-              </a>
+              {activeGroup?.id !== 'cpp' && (
+                <a
+                  className="docs-link"
+                  href={sources.quickStart}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Docs de Unreal <ArrowUpRight size={14} />
+                </a>
+              )}
             </div>
           </header>
           <main id="contenido" className="content" tabIndex={-1}>
@@ -239,11 +305,11 @@ export function LearningShell({
         <DialogContent className="search-dialog">
           <DialogTitle>¿Qué quieres entender hoy?</DialogTitle>
           <DialogDescription>
-            Busca entre las lecciones disponibles.
+            Busca grupos y actividades, incluidas las páginas pendientes.
           </DialogDescription>
           <Input
             aria-label="Buscar lecciones"
-            placeholder="Prueba con «Actor» o «Blueprint»"
+            placeholder="Prueba con «variables», «bucles» o «Unreal»"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -262,18 +328,28 @@ export function LearningShell({
                   <span>
                     <strong>{item.title}</strong>
                     <small>{item.description}</small>
+                    <small className="search-result-context">
+                      {item.context} ·{' '}
+                      {item.status === 'planned'
+                        ? 'Contenido pendiente'
+                        : item.status === 'group'
+                          ? 'Temario'
+                          : 'Disponible'}
+                    </small>
                   </span>
                   <ChevronRight size={16} />
                 </Link>
               ))
             ) : (
               <p>
-                No hay resultados. Prueba con «C++», «escala» o «Blueprint».
+                No hay resultados. Prueba con «variables», «bucles» o «Unreal».
               </p>
             )}
           </div>
           <small className="muted">
-            {lessons.length} lecciones disponibles · Más temas en preparación
+            {learningGroups.length} grupos ·{' '}
+            {lessons.filter((item) => item.status === 'planned').length}{' '}
+            actividades por desarrollar
           </small>
         </DialogContent>
       </Dialog>

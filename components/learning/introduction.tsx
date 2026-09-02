@@ -1,5 +1,8 @@
 'use client';
 
+// Borrador de la primera versión, conservado para la etapa de Unreal.
+// No se publica dentro del grupo de C++ sin Unreal Engine.
+
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -467,7 +470,7 @@ export function Introduction() {
         <Link href="/" className="text-link">
           <ArrowLeft size={14} /> Volver a bienvenida
         </Link>
-        <CompleteLesson id="introduccion" />
+        <CompleteLesson id="cpp-introduccion" />
       </div>
       <div className="next-topic">
         <span>DESPUÉS APRENDEREMOS</span>
