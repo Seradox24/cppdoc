@@ -32,7 +32,7 @@ npm run lint
 - `/`: bienvenida, ruta de aprendizaje y laboratorio original de escala de un Actor.
 - `/cpp`: temario de **Introducción a C++ sin Unreal Engine**, con 19 actividades ordenadas.
 - `/cpp/tipos-de-datos-y-variables`: primera actividad publicada de C++ básico, con explorador de seis tipos, ejecución paso a paso, cuatro ejercicios y un programa completo.
-- `/cpp/formato-de-variables`: actividad publicada sobre declaraciones, identificadores y convenciones, con un constructor interactivo, inspector de nombres y revisión de una captura de código.
+- `/cpp/formato-de-variables`: actividad publicada sobre declaraciones, nombres y convenciones, con un constructor interactivo, editores numerados, ejemplos por contexto y un recorrido del alcance.
 - `/cpp/[slug]`: página individual de cada actividad, con anterior/siguiente. Las demás actividades siguen pendientes de contenido.
 - `/unreal-engine`: grupo **C++ en Unreal Engine**, reservado para definir actividades más adelante.
 - `/introduccion`: redirección compatible hacia `/cpp/introduccion`.
@@ -62,10 +62,9 @@ Las comprobaciones de los seis tipos, sus valores editados, la salida y los lite
 
 La actividad separa la sintaxis que exige C++ de las convenciones elegidas por un equipo. Compara un ejemplo frecuente de `camelCase` con el estándar de Epic: `PascalCase`, nombres en inglés y prefijo `b` para variables booleanas. También precisa que una variable local como `int Coins;` es una definición sin inicialización, no una declaración que solo anuncia un nombre.
 
-- `components/learning/variable-format-lesson.tsx` contiene el constructor de declaraciones, el inspector de nombres, la comparación del punto y coma, la revisión de la captura, el diagrama de alcance y los ejercicios.
-- `lib/variable-format.ts` centraliza las transformaciones de nombres, las reglas comprobables y la generación de declaraciones.
-- `public/course/format-variables-reference.png` conserva la captura compartida que se analiza en la actividad.
-- `tests/variable-format.test.mjs` verifica las sugerencias de nombres, identificadores, palabras reservadas y declaraciones generadas.
+- `components/learning/variable-format-lesson.tsx` contiene el constructor de declaraciones, las guías de código con líneas numeradas, la comparación del punto y coma, los ejemplos por contexto, el recorrido del alcance y los ejercicios.
+- `lib/variable-format.ts` centraliza las transformaciones de nombres y la generación de declaraciones.
+- `tests/variable-format.test.mjs` verifica las sugerencias de nombres y las declaraciones generadas.
 
 Los controles no compilan C++. Sus límites son didácticos, no los rangos de los tipos; los diagramas no representan tamaños reales en memoria. Se aclara que `int puntos = 3.8;` descarta la fracción, mientras que las llaves rechazan esa conversión; que las variables locales sin inicializador no empiezan automáticamente en cero; y que los decimales de punto flotante pueden ser aproximados.
 

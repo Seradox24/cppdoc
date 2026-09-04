@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,9 +10,6 @@ import {
   CheckCircle2,
   CircleHelp,
   Code2,
-  Eye,
-  ImageIcon,
-  Lightbulb,
   ListEnd,
   RotateCcw,
   TriangleAlert,
@@ -25,7 +21,6 @@ import { CompleteLesson, LearningShell } from './learning-shell';
 import {
   buildDeclaration,
   formatTypes,
-  inspectVariableName,
   suggestVariableName,
   type FormatType,
   type NamingStyle,
@@ -209,174 +204,277 @@ function DeclarationLab() {
   );
 }
 
-function NameInspector() {
-  const [type, setType] = useState<FormatType>('bool');
-  const [style, setStyle] = useState<NamingStyle>('unreal');
-  const [name, setName] = useState('bIsEnoughMoney');
-  const check = inspectVariableName(name, type, style);
-  const suggestion = suggestVariableName(name, type, style);
-  const rows = [
-    {
-      pass: check.portable,
-      text: 'Empieza con letra o _ y solo usa letras, números o _.',
-    },
-    { pass: !check.isKeyword, text: 'No es una palabra reservada de C++.' },
-    {
-      pass: check.styleMatches,
-      text:
-        style === 'unreal'
-          ? type === 'bool'
-            ? 'Sigue la forma bHasEnoughMoney de Unreal.'
-            : 'Sigue PascalCase, la convención de Unreal.'
-          : 'Sigue camelCase, la convención elegida para este ejemplo.',
-    },
-  ];
+const tokenPattern =
+  /(\/\/.*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\b(?:std::string|bool|int|float|double|char)\b|\b(?:true|false|\d+(?:\.\d+)?f?)\b|\b[A-Za-z_][A-Za-z0-9_]*(?=\s*(?:=|;)))/g;
+
+function highlightCode(line: string) {
+  return line.split(tokenPattern).map((token, index) => {
+    let className = 'fmt-token-plain';
+    if (token.startsWith('//')) className = 'fmt-token-comment';
+    else if (/^(std::string|bool|int|float|double|char)$/.test(token))
+      className = 'fmt-token-type';
+    else if (/^(true|false|\d|"|')/.test(token)) className = 'fmt-token-value';
+    else if (/^[A-Za-z_]/.test(token)) className = 'fmt-token-name';
+    return (
+      <span className={className} key={`${token}-${index}`}>
+        {token}
+      </span>
+    );
+  });
+}
+
+function CodeEditor({
+  filename,
+  lines,
+  activeLine,
+}: {
+  filename: string;
+  lines: readonly string[];
+  activeLine?: number;
+}) {
   return (
-    <div className="fmt-name-lab">
-      <div className="fmt-name-inputs">
-        <label htmlFor="fmt-exact-name">
-          Prueba un nombre exacto
-          <Input
-            id="fmt-exact-name"
-            value={name}
-            maxLength={40}
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
-        <label htmlFor="fmt-name-type">
-          Tipo
-          <select
-            id="fmt-name-type"
-            value={type}
-            onChange={(event) => setType(event.target.value as FormatType)}
-          >
-            {formatTypes.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label htmlFor="fmt-name-style">
-          Convención
-          <select
-            id="fmt-name-style"
-            value={style}
-            onChange={(event) => setStyle(event.target.value as NamingStyle)}
-          >
-            <option value="general">C++ frecuente</option>
-            <option value="unreal">Epic / Unreal</option>
-          </select>
-        </label>
-      </div>
-      <div
-        className={`fmt-name-result ${check.compiles ? 'is-valid' : 'is-invalid'}`}
-      >
-        <span>
-          {check.compiles ? <CheckCircle2 size={18} /> : <X size={18} />}
-          {check.compiles
-            ? 'Identificador válido'
-            : 'El compilador rechazará este nombre'}
+    <div className="fmt-editor">
+      <div className="fmt-editor-bar">
+        <span className="fmt-editor-dots" aria-hidden="true">
+          <i />
+          <i />
+          <i />
         </span>
-        <code>
-          {formatTypes.find((item) => item.id === type)!.label} {name || '…'};
-        </code>
+        <code>{filename}</code>
       </div>
-      <ul>
-        {rows.map((row) => (
-          <li key={row.text} className={row.pass ? 'is-pass' : 'is-fail'}>
-            {row.pass ? <Check size={15} /> : <X size={15} />}
-            <span>{row.text}</span>
+      <ol aria-label={`Código de ${filename}`}>
+        {lines.map((line, index) => (
+          <li
+            className={activeLine === index + 1 ? 'is-active' : ''}
+            key={`${line}-${index}`}
+          >
+            <span className="fmt-line-number" aria-hidden="true">
+              {index + 1}
+            </span>
+            <code>{line ? highlightCode(line) : '\u00a0'}</code>
           </li>
         ))}
-      </ul>
-      {check.compiles && !check.styleMatches && (
-        <button
-          type="button"
-          className="fmt-suggestion"
-          onClick={() => setName(suggestion)}
-        >
-          <Lightbulb size={15} /> Usar sugerencia: <code>{suggestion}</code>
-        </button>
-      )}
+      </ol>
     </div>
   );
 }
 
-const reviewPoints = {
-  variables: {
-    label: 'Líneas 13–17',
-    title: 'Las variables no tienen valor inicial',
-    text: 'Las cinco declaraciones son válidas, pero bool, float e int locales no reciben automáticamente cero o false. Inicializarlas permite razonar sobre su primer estado.',
+const namingLines = [
+  '// 1. Tipo + nombre descriptivo + valor inicial',
+  'int PlayerScore = 0;',
+  'float MaxWalkSpeed = 600.0f;',
+  '',
+  '// 2. Un bool responde sí/no y usa el prefijo b',
+  'bool bCanJump = true;',
+  '',
+  '// 3. Una variable por línea',
+  "char DifficultyRank = 'A';",
+  'std::string PlayerName = "Ada";',
+] as const;
+
+function NamingGuide() {
+  return (
+    <div className="fmt-code-lesson">
+      <CodeEditor filename="NamingExamples.cpp" lines={namingLines} />
+      <ol className="fmt-code-order">
+        <li>
+          <span>01</span>
+          <div>
+            <strong>Cuenta qué guarda</strong>
+            <p>
+              <code>PlayerScore</code> explica mejor el dato que{' '}
+              <code>Number</code> o <code>Value1</code>.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span>02</span>
+          <div>
+            <strong>Formula los booleanos como una respuesta</strong>
+            <p>
+              <code>bCanJump</code> se lee como “¿puede saltar?” y su valor solo
+              puede ser <code>true</code> o <code>false</code>.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span>03</span>
+          <div>
+            <strong>Deja una declaración por línea</strong>
+            <p>
+              Así puedes localizar el tipo, el nombre y el valor inicial sin
+              recorrer una línea larga.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  );
+}
+
+const exampleGroups = {
+  character: {
+    label: 'Personaje',
+    filename: 'CharacterState.cpp',
+    title: 'Estado de un personaje',
+    text: 'Tres preguntas distintas: cuánta salud tiene, cuánto modifica su daño y si puede recibir daño.',
+    lines: [
+      'int MaxHealth = 100;',
+      'float DamageMultiplier = 1.25f;',
+      'bool bIsInvincible = false;',
+    ],
   },
-  names: {
-    label: 'Nombres',
-    title: 'La convención de Unreal está presente',
-    text: 'bIsEnoughMoney usa el prefijo b para bool. Cost, Coins, Bills1 y Bills2 empiezan en mayúscula. Los números son válidos al final, aunque nombres como FirstBillValue explican mejor el propósito.',
+  inventory: {
+    label: 'Inventario',
+    filename: 'InventoryState.cpp',
+    title: 'Datos de un inventario',
+    text: 'El tipo cambia según lo que representa el dato: cantidad, peso con decimales o una ranura identificada por una letra.',
+    lines: [
+      'int SmallPotionCount = 3;',
+      'double TotalWeight = 14.75;',
+      "char SelectedSlot = 'B';",
+    ],
   },
-  functions: {
-    label: 'Líneas 3–9',
-    title: 'Declaración y definición coinciden',
-    text: 'int SayHello(); anuncia la función. La definición repite int SayHello() y añade el cuerpo. Como la definición aparece justo después, el anuncio separado no era necesario en este archivo, pero es válido.',
-  },
-  return: {
-    label: 'Líneas 19–21',
-    title: 'return termina main',
-    text: 'return SayHello(); llama a la función, recibe 1 y termina main con ese código. Por convención, 0 señala éxito y un valor distinto de 0 comunica un problema. La instrucción std::cout posterior nunca puede ejecutarse.',
+  interface: {
+    label: 'Interfaz',
+    filename: 'InterfaceState.cpp',
+    title: 'Estado de la interfaz',
+    text: 'También puedes describir texto, decisiones de encendido o apagado y valores decimales como el volumen.',
+    lines: [
+      'std::string PlayerTitle = "Explorer";',
+      'bool bIsMenuOpen = true;',
+      'float MusicVolume = 0.8f;',
+    ],
   },
 } as const;
-type ReviewPoint = keyof typeof reviewPoints;
+type ExampleGroup = keyof typeof exampleGroups;
 
-function ScreenshotReview() {
-  const [active, setActive] = useState<ReviewPoint>('variables');
-  const point = reviewPoints[active];
+function ExampleGallery() {
+  const [active, setActive] = useState<ExampleGroup>('character');
+  const example = exampleGroups[active];
   return (
-    <div className="fmt-review">
-      <div className="fmt-review-visual">
-        <figure>
-          <Image
-            src="/course/format-variables-reference.png"
-            width="311"
-            height="355"
-            alt="Captura de Visual Studio con SayHello y cinco variables declaradas dentro de main"
-          />
-          <figcaption>Captura compartida para esta actividad</figcaption>
-        </figure>
-        <div className="fmt-review-buttons" aria-label="Puntos para revisar">
-          {Object.entries(reviewPoints).map(([id, item]) => (
-            <button
-              type="button"
-              key={id}
-              aria-pressed={active === id}
-              onClick={() => setActive(id as ReviewPoint)}
-            >
-              <span>{item.label}</span>
-              {item.title}
-            </button>
-          ))}
+    <div className="fmt-examples">
+      <div className="fmt-example-tabs" aria-label="Grupos de ejemplos">
+        {Object.entries(exampleGroups).map(([id, item]) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={active === id}
+            onClick={() => setActive(id as ExampleGroup)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div className="fmt-example-grid">
+        <CodeEditor filename={example.filename} lines={example.lines} />
+        <div className="fmt-example-note" aria-live="polite">
+          <span>EJEMPLO ACTIVO</span>
+          <h3>{example.title}</h3>
+          <p>{example.text}</p>
+          <div className="fmt-code-legend" aria-label="Colores del código">
+            <span>
+              <i className="is-type" /> Tipo
+            </span>
+            <span>
+              <i className="is-name" /> Nombre
+            </span>
+            <span>
+              <i className="is-value" /> Valor
+            </span>
+          </div>
         </div>
       </div>
-      <div className="fmt-review-explanation" aria-live="polite">
-        <span>
-          <Eye size={17} /> {point.label}
-        </span>
-        <h3>{point.title}</h3>
-        <p>{point.text}</p>
-        {active === 'variables' && (
-          <pre>
-            <code>
-              {
-                'bool bIsEnoughMoney = false;\nfloat Cost = 0.0f;\nfloat Coins = 0.0f;\nint FirstBillValue = 0;\nint SecondBillValue = 0;'
-              }
-            </code>
-          </pre>
-        )}
-        {active === 'return' && (
-          <Link href="/cpp/funciones-y-flujo-de-ejecucion">
-            Continuar después con funciones <ArrowRight size={14} />
-          </Link>
-        )}
+    </div>
+  );
+}
+
+const scopeLines = [
+  'int main()',
+  '{',
+  '    int PlayerScore = 10;',
+  '    {',
+  '        bool bHasBonus = true;',
+  '    } // bHasBonus termina aquí',
+  '    std::cout << PlayerScore;',
+  '} // PlayerScore termina aquí',
+] as const;
+
+const scopeSteps = [
+  {
+    line: 3,
+    label: 'Entramos en main',
+    text: 'PlayerScore nace al ejecutar su declaración y puede usarse desde aquí hasta la llave que cierra main.',
+    variables: ['PlayerScore'],
+  },
+  {
+    line: 5,
+    label: 'Entramos en el bloque interior',
+    text: 'bHasBonus nace dentro de este bloque. Aquí puedes usarla junto con PlayerScore, que viene del bloque exterior.',
+    variables: ['PlayerScore', 'bHasBonus'],
+  },
+  {
+    line: 6,
+    label: 'Salimos del bloque interior',
+    text: 'La llave cierra el alcance de bHasBonus. PlayerScore sigue disponible porque main aún no ha terminado.',
+    variables: ['PlayerScore'],
+  },
+  {
+    line: 8,
+    label: 'Salimos de main',
+    text: 'La última llave cierra el alcance de PlayerScore. Fuera de la función ya no existe ninguna de las dos variables locales.',
+    variables: [],
+  },
+] as const;
+
+function ScopeLab() {
+  const [step, setStep] = useState(0);
+  const current = scopeSteps[step];
+  return (
+    <div className="fmt-scope-lab">
+      <div className="fmt-scope-controls" aria-label="Pasos del alcance">
+        {scopeSteps.map((item, index) => (
+          <button
+            type="button"
+            key={item.label}
+            aria-pressed={step === index}
+            onClick={() => setStep(index)}
+          >
+            <span>{index + 1}</span>
+            Paso {index + 1}
+          </button>
+        ))}
       </div>
+      <div className="fmt-scope-grid">
+        <CodeEditor
+          filename="Scope.cpp"
+          lines={scopeLines}
+          activeLine={current.line}
+        />
+        <div className="fmt-scope-state" aria-live="polite">
+          <span>
+            PASO {step + 1} · LÍNEA {current.line}
+          </span>
+          <h3>{current.label}</h3>
+          <p>{current.text}</p>
+          <strong>Variables disponibles ahora</strong>
+          <div>
+            {current.variables.length > 0 ? (
+              current.variables.map((variable) => (
+                <code key={variable}>{variable}</code>
+              ))
+            ) : (
+              <em>Ninguna variable local</em>
+            )}
+          </div>
+        </div>
+      </div>
+      <p className="fmt-scope-caption">
+        Una variable del bloque exterior puede usarse dentro del bloque
+        interior. Una variable creada dentro no puede escapar de sus llaves.
+        Este ejemplo muestra su <strong>alcance</strong> y su tiempo de vida de
+        forma simplificada.
+      </p>
     </div>
   );
 }
@@ -577,8 +675,9 @@ export function VariableFormatLesson() {
         <nav className="fmt-page-nav" aria-label="En esta lección">
           <a href="#declaracion">01 · Declaración</a>
           <a href="#nombres">02 · Nombres</a>
-          <a href="#captura">03 · Revisar la captura</a>
-          <a href="#practicar">04 · Practicar</a>
+          <a href="#ejemplos">03 · Ejemplos</a>
+          <a href="#alcance">04 · Alcance</a>
+          <a href="#practicar">05 · Practicar</a>
         </nav>
         <section
           id="declaracion"
@@ -612,6 +711,21 @@ export function VariableFormatLesson() {
               </p>
             </div>
           </div>
+          <div className="fmt-subsection" aria-labelledby="fmt-semicolon-title">
+            <div className="fmt-subsection-heading">
+              <ListEnd size={20} />
+              <div>
+                <h3 id="fmt-semicolon-title">
+                  El punto y coma termina la instrucción
+                </h3>
+                <p>
+                  El salto de línea organiza el código para nosotros. Comprueba
+                  cómo cambia la presentación sin cambiar las declaraciones.
+                </p>
+              </div>
+            </div>
+            <SemicolonLab />
+          </div>
         </section>
         <section
           id="nombres"
@@ -621,15 +735,14 @@ export function VariableFormatLesson() {
           <div className="fmt-section-heading">
             <span>02</span>
             <div>
-              <h2 id="fmt-names-title">Un nombre debe compilar y explicar</h2>
+              <h2 id="fmt-names-title">Nombres que explican el dato</h2>
               <p>
-                C++ decide qué identificadores son válidos. Tu equipo decide
-                cómo escribirlos. Esta guía usa una convención frecuente de C++
-                para comparar con la convención oficial de Epic.
+                Lee los ejemplos en orden. El nombre describe el propósito; la
+                forma de escribirlo sigue una convención acordada por el equipo.
               </p>
             </div>
           </div>
-          <NameInspector />
+          <NamingGuide />
           <div className="fmt-convention-grid">
             <div>
               <span>C++ · EJEMPLO FRECUENTE</span>
@@ -650,77 +763,40 @@ export function VariableFormatLesson() {
             </div>
           </div>
         </section>
-        <section className="fmt-section" aria-labelledby="fmt-semicolon-title">
-          <div className="fmt-section-heading">
-            <span>
-              <ListEnd size={22} />
-            </span>
-            <div>
-              <h2 id="fmt-semicolon-title">
-                El punto y coma termina la instrucción
-              </h2>
-              <p>
-                El salto de línea organiza el código para nosotros. Comprueba
-                cómo cambia la presentación sin cambiar las declaraciones.
-              </p>
-            </div>
-          </div>
-          <SemicolonLab />
-        </section>
         <section
-          id="captura"
+          id="ejemplos"
           className="fmt-section"
-          aria-labelledby="fmt-review-title"
+          aria-labelledby="fmt-examples-title"
         >
           <div className="fmt-section-heading">
             <span>03</span>
             <div>
-              <h2 id="fmt-review-title">
-                Leamos la captura como una revisión de código
-              </h2>
+              <h2 id="fmt-examples-title">El mismo formato en otros datos</h2>
               <p>
-                Selecciona cada observación. Conservamos aquí lo relacionado con
-                variables y dejamos el desarrollo completo de funciones para su
-                propia actividad.
+                Cambia de contexto y observa cómo cada declaración conserva el
+                orden: tipo, nombre descriptivo, valor inicial y punto y coma.
               </p>
             </div>
           </div>
-          <ScreenshotReview />
+          <ExampleGallery />
         </section>
-        <section className="fmt-section" aria-labelledby="fmt-scope-title">
+        <section
+          id="alcance"
+          className="fmt-section"
+          aria-labelledby="fmt-scope-title"
+        >
           <div className="fmt-section-heading">
-            <span>
-              <ImageIcon size={21} />
-            </span>
+            <span>04</span>
             <div>
               <h2 id="fmt-scope-title">¿Dónde existen estas variables?</h2>
               <p>
-                En la captura están entre las llaves de <code>main</code>. Por
-                eso son variables locales: solo pueden usarse dentro de esa
-                función y su vida termina al salir de ella.
+                Las llaves crean bloques. Recorre el código para ver qué
+                variables están disponibles en cada punto y cuándo dejan de
+                existir.
               </p>
             </div>
           </div>
-          <div className="fmt-scope-diagram">
-            <div className="fmt-file-room">
-              <span>archivo CursoCPlusPlus.cpp</span>
-              <div className="fmt-function-room">
-                <span>función main()</span>
-                <div className="fmt-local-room">
-                  <code>bIsEnoughMoney</code>
-                  <code>Cost</code>
-                  <code>Coins</code>
-                  <code>FirstBillValue</code>
-                  <strong>Variables locales</strong>
-                </div>
-              </div>
-            </div>
-            <p>
-              Esta es una vista conceptual del <strong>alcance</strong>, no un
-              mapa real de memoria. Lo estudiaremos en detalle en “Alcance y
-              tiempo de vida”.
-            </p>
-          </div>
+          <ScopeLab />
         </section>
         <section
           id="practicar"
@@ -728,7 +804,7 @@ export function VariableFormatLesson() {
           aria-labelledby="fmt-practice-title"
         >
           <div className="fmt-section-heading">
-            <span>04</span>
+            <span>05</span>
             <div>
               <h2 id="fmt-practice-title">
                 Practica las decisiones de formato
@@ -753,10 +829,10 @@ export function VariableFormatLesson() {
         <details className="fmt-references">
           <summary>Fuente, correcciones y referencias</summary>
           <p>
-            Actividad adaptada del texto y de la captura compartidos. La
-            preparación de Visual Studio pertenece a “Entorno y compilación”; la
-            declaración, definición, llamada y retorno de funciones se
-            desarrollarán en “Funciones y flujo de ejecución”.
+            Actividad adaptada del texto compartido. La preparación de Visual
+            Studio pertenece a “Entorno y compilación”; la declaración,
+            definición, llamada y retorno de funciones se desarrollarán en
+            “Funciones y flujo de ejecución”.
           </p>
           <ul>
             <li>

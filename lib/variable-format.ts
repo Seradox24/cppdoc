@@ -20,73 +20,6 @@ export const formatTypes = [
 export type FormatType = (typeof formatTypes)[number]['id'];
 export type NamingStyle = 'general' | 'unreal';
 
-const cppKeywords = new Set([
-  'alignas',
-  'alignof',
-  'and',
-  'asm',
-  'auto',
-  'bool',
-  'break',
-  'case',
-  'catch',
-  'char',
-  'class',
-  'const',
-  'constexpr',
-  'continue',
-  'default',
-  'delete',
-  'do',
-  'double',
-  'else',
-  'enum',
-  'explicit',
-  'export',
-  'extern',
-  'false',
-  'float',
-  'for',
-  'friend',
-  'goto',
-  'if',
-  'inline',
-  'int',
-  'long',
-  'namespace',
-  'new',
-  'noexcept',
-  'not',
-  'nullptr',
-  'operator',
-  'or',
-  'private',
-  'protected',
-  'public',
-  'register',
-  'return',
-  'short',
-  'signed',
-  'sizeof',
-  'static',
-  'struct',
-  'switch',
-  'template',
-  'this',
-  'throw',
-  'true',
-  'try',
-  'typedef',
-  'typename',
-  'union',
-  'unsigned',
-  'using',
-  'virtual',
-  'void',
-  'volatile',
-  'while',
-]);
-
 function words(value: string) {
   return value
     .normalize('NFD')
@@ -118,27 +51,6 @@ export function suggestVariableName(
     return pascal;
   }
   return pascal[0].toLowerCase() + pascal.slice(1);
-}
-
-export function inspectVariableName(
-  name: string,
-  type: FormatType,
-  style: NamingStyle,
-) {
-  const portable = /^[A-Za-z_][A-Za-z0-9_]*$/.test(name);
-  const isKeyword = cppKeywords.has(name);
-  const styleMatches =
-    style === 'unreal'
-      ? type === 'bool'
-        ? /^b[A-Z][A-Za-z0-9]*$/.test(name)
-        : /^[A-Z][A-Za-z0-9]*$/.test(name)
-      : /^[a-z][A-Za-z0-9]*$/.test(name);
-  return {
-    portable,
-    isKeyword,
-    styleMatches,
-    compiles: portable && !isKeyword,
-  };
 }
 
 export function buildDeclaration({
