@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { PendingLesson } from '@/components/learning/course-pages';
 import { VariablesLesson } from '@/components/learning/variables-lesson';
+import { VariableFormatLesson } from '@/components/learning/variable-format-lesson';
 import { cppActivities, lessons } from '@/lib/lessons';
 import { learningMetadata } from '@/lib/page-metadata';
 
@@ -30,6 +31,9 @@ export default async function CppActivityPage({ params }: Props) {
   if (!lesson) notFound();
   if (lesson.id === 'cpp-tipos-de-datos-y-variables') {
     return <VariablesLesson />;
+  }
+  if (lesson.id === 'cpp-formato-de-variables') {
+    return <VariableFormatLesson />;
   }
   return <PendingLesson lesson={lesson} />;
 }

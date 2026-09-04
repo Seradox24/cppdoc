@@ -40,6 +40,7 @@ export const cppActivities = [
     slug: 'formato-de-variables',
     title: 'Formato de variables',
     description: 'Nombres, declaraciones y convenciones de escritura.',
+    ready: true,
   },
   {
     slug: 'funciones-y-flujo-de-ejecucion',
