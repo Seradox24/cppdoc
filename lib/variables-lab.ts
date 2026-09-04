@@ -395,13 +395,28 @@ export function createVariableExample(selected: DataType, values: LabValues) {
       explanation: details.initialization,
     },
     {
-      label: '02 / PROTEGE LO QUE NO CAMBIA',
-      title: `const también funciona con ${type.label}`,
-      code: `const ${type.label} ${type.name} = ${literal};\n// ${type.name} = ${assignedLiteral}; // error`,
-      explanation: `const fija este valor al inicializarlo. Intentar después asignar ${assignedLiteral} a ${type.name} provoca un error de compilación.`,
+      label: '02 / EL TIPO LIMITA EL DATO',
+      title: type.category,
+      code: declaration,
+      explanation: type.description,
     },
-    details.pitfall,
-    details.format,
+    {
+      label: '03 / ESCRIBE EL LITERAL CORRECTO',
+      title: `Así se representa un valor ${type.label}`,
+      code: literal,
+      explanation:
+        selected === 'int'
+          ? 'Un literal int se escribe como un número entero, sin parte decimal.'
+          : selected === 'float'
+            ? 'El sufijo f indica que este literal decimal es float.'
+            : selected === 'double'
+              ? 'Un decimal sin sufijo f es un literal double.'
+              : selected === 'bool'
+                ? 'true y false se escriben sin comillas.'
+                : selected === 'char'
+                  ? 'Un carácter básico se delimita con comillas simples.'
+                  : 'Un texto de std::string se delimita con comillas dobles.',
+    },
   ];
   const invalidLiteral =
     selected === 'char'
@@ -425,27 +440,36 @@ export function createVariableExample(selected: DataType, values: LabValues) {
       hint: `Necesitas tanto el tipo ${type.label} como el nombre ${type.name}. Revisa también cómo se escribe su valor.`,
     },
     {
-      title: 'Asignar reemplaza el valor',
-      prompt: `Después de estas dos líneas, ¿qué guarda ${type.name}?`,
-      code: `${declaration}\n${lines[1]}`,
-      choices: [literal, assignedLiteral, 'Se crea una segunda variable.'],
+      title: 'Reconocer el valor inicial',
+      prompt: `En ${declaration}, ¿qué parte es el valor inicial?`,
+      code: declaration,
+      choices: [type.name, literal, type.label],
       answer: 1,
-      explanation: `La segunda línea guarda ${assignedLiteral}. El nombre y el tipo siguen siendo los mismos; ${literal} se reemplaza.`,
-      hint: 'La variable ya existe. = guarda en ella el valor escrito a la derecha.',
+      explanation: `${literal} es el dato concreto escrito después de =. ${type.name} es el nombre y ${type.label} es el tipo.`,
+      hint: 'Busca el dato que aparece después de = y antes del punto y coma.',
     },
-    details.exercise,
     {
-      title: `Proteger un dato ${type.label}`,
-      prompt: '¿Qué ocurre al intentar compilar este código?',
-      code: `const ${type.label} ${type.name} = ${literal};\n${type.name} = ${assignedLiteral};`,
+      title: `Reconocer la categoría de ${type.label}`,
+      prompt: `¿Qué clase de dato representa ${type.label} en esta actividad?`,
       choices: [
-        `Se guarda ${assignedLiteral}.`,
-        'Se crea otra variable.',
-        'La segunda línea provoca un error de compilación.',
+        type.category,
+        ...dataTypes
+          .filter((item) => item.id !== selected)
+          .slice(0, 2)
+          .map((item) => item.category),
       ],
-      answer: 2,
-      explanation: `const impide cambiar ${type.name} después de inicializarla. Esta regla también se aplica al tipo ${type.label}; el programa se rechaza antes de ejecutarse.`,
-      hint: 'const protege el dato frente a asignaciones posteriores, independientemente de este tipo.',
+      answer: 0,
+      explanation: `${type.label} se usa aquí para ${type.category.toLowerCase()}.`,
+      hint: `Revisa la tarjeta descriptiva de ${type.label} en el explorador.`,
+    },
+    {
+      title: 'Reconocer el nombre',
+      prompt: `¿Qué nombre identifica la variable de este ejemplo?`,
+      code: declaration,
+      choices: [type.label, type.name, literal],
+      answer: 1,
+      explanation: `${type.name} es el identificador que permite referirse a este dato en el código.`,
+      hint: 'El nombre aparece entre el tipo y el signo =.',
     },
   ];
   const includes =

@@ -32,7 +32,9 @@ npm run lint
 - `/`: bienvenida, ruta de aprendizaje y laboratorio original de escala de un Actor.
 - `/cpp`: temario de **Introducción a C++ sin Unreal Engine**, con 19 actividades ordenadas.
 - `/cpp/tipos-de-datos-y-variables`: primera actividad publicada de C++ básico, con explorador de seis tipos, ejecución paso a paso, cuatro ejercicios y un programa completo.
-- `/cpp/formato-de-variables`: actividad publicada sobre declaraciones, nombres y convenciones, con un constructor interactivo, editores numerados, ejemplos por contexto y un recorrido del alcance.
+- `/cpp/formato-de-variables`: actividad de legibilidad y convenciones, separada de tipos, asignaciones y funciones.
+- `/cpp/funciones-y-flujo-de-ejecucion`: anatomía de una función, prototipo, definición y recorrido interactivo de una llamada desde `main` hasta `return`.
+- `/cpp/asignacion-y-operadores`: inicialización, reasignación, lectura de valores, familias de operadores, cartera interactiva y precedencia.
 - `/cpp/[slug]`: página individual de cada actividad, con anterior/siguiente. Las demás actividades siguen pendientes de contenido.
 - `/unreal-engine`: grupo **C++ en Unreal Engine**, reservado para definir actividades más adelante.
 - `/introduccion`: redirección compatible hacia `/cpp/introduccion`.
@@ -45,26 +47,28 @@ La introducción original, que mezclaba C++ con Unreal, permanece en `components
 
 ## Tipos de datos y variables
 
-La lección adapta el material de la cartera: instrucciones ordenadas, compartimentos y datos identificables. Se separan nombre, tipo y valor; se añaden `char`, `double`, `std::string`, inicialización, asignación, lectura, `const` y conversiones que pueden perder información. Las funciones tienen una explicación breve y un enlace a su actividad futura. Los conceptos de Actors y componentes se reservan para el grupo de Unreal.
+La lección adapta el material de la cartera: compartimentos y datos identificables. Se separan nombre, tipo y valor, y se añaden `char`, `double` y `std::string`. La reasignación, los operadores y las funciones se reservan para sus actividades correspondientes.
 
-- `components/learning/variables-lesson.tsx` compone el explorador, la simulación, los ejercicios con feedback y el programa copiable.
+- `components/learning/variables-lesson.tsx` compone el explorador de tipos, la anatomía de una declaración y los ejercicios con feedback.
 - `components/learning/variables-lesson.css` mantiene los estilos de la actividad aislados.
-- `lib/variables-lab.ts` genera las instrucciones, los estados de ejecución, los ejercicios, los consejos y el programa completo para cada tipo y valor inicial. También escapa los textos para los literales C++.
+- `lib/variables-lab.ts` genera los ejemplos y ejercicios para cada tipo y valor inicial. También escapa los textos para los literales C++.
 - Los experimentos usan estado React. La actividad se puede marcar como completada con el sistema de progreso existente.
 
-El tipo y los valores viven en `VariablesLesson`. El laboratorio superior y el selector que permanece visible al bajar comparten la selección. La declaración explicada, el paso a paso y el resto de la actividad se actualizan juntos. Cambiar el tipo o su valor inicial reinicia la ejecución, las respuestas y el estado de copia, evitando conservar resultados de otro ejemplo. Cada tipo mantiene el último valor elegido al volver a seleccionarlo.
+El tipo y los valores viven en `VariablesLesson`. El laboratorio superior y el selector que permanece visible al bajar comparten la selección. La declaración explicada y los ejercicios se actualizan juntos. Cada tipo mantiene el último valor elegido al volver a seleccionarlo.
 
-Los ejemplos de `bool` usan negación lógica y `std::boolalpha`, los de `char` sustituyen caracteres y los de `std::string` reemplazan y concatenan texto. El programa completo reproduce las mismas instrucciones de la simulación. Los consejos y las cuatro preguntas se adaptan al tipo, incluida la diferencia entre una cadena vacía construida por defecto y un tipo fundamental local sin inicializador.
+Los consejos y las cuatro preguntas se adaptan al tipo, incluida la diferencia entre una cadena vacía construida por defecto y un tipo fundamental local sin inicializador.
 
 Las comprobaciones de los seis tipos, sus valores editados, la salida y los literales de texto se ejecutan con `node --experimental-strip-types --test tests/variables-lab.test.mjs`.
 
-## Formato de variables
+## Fundamentos separados por actividad
 
-La actividad separa la sintaxis que exige C++ de las convenciones elegidas por un equipo. Compara un ejemplo frecuente de `camelCase` con el estándar de Epic: `PascalCase`, nombres en inglés y prefijo `b` para variables booleanas. También precisa que una variable local como `int Coins;` es una definición sin inicialización, no una declaración que solo anuncia un nombre.
+Las actividades evitan repetir el mismo concepto en distintas páginas. “Tipos de datos y variables” explica qué se guarda; “Formato de variables” se limita a legibilidad y convenciones; “Funciones y flujo de ejecución” sigue llamadas y retornos; “Asignación y operadores” cambia valores y resuelve expresiones.
 
-- `components/learning/variable-format-lesson.tsx` contiene el constructor de declaraciones, las guías de código con líneas numeradas, la comparación del punto y coma, los ejemplos por contexto, el recorrido del alcance y los ejercicios.
-- `lib/variable-format.ts` centraliza las transformaciones de nombres y la generación de declaraciones.
-- `tests/variable-format.test.mjs` verifica las sugerencias de nombres y las declaraciones generadas.
+- `components/learning/variable-format-lesson.tsx` contiene comparaciones visuales, convenciones y ejercicios de formato.
+- `components/learning/function-flow-lesson.tsx` contiene la anatomía y el recorrido interactivo de funciones.
+- `components/learning/assignment-operators-lesson.tsx` contiene la línea temporal de valores, los operadores, la cartera y la precedencia.
+- `components/learning/cpp-code-editor.tsx` y `components/learning/cpp-foundations.css` comparten el editor numerado y el sistema visual de estas actividades.
+- `lib/assignment-lab.ts` resuelve los resultados de los laboratorios de operadores; `tests/assignment-lab.test.mjs` verifica sus casos principales.
 
 Los controles no compilan C++. Sus límites son didácticos, no los rangos de los tipos; los diagramas no representan tamaños reales en memoria. Se aclara que `int puntos = 3.8;` descarta la fracción, mientras que las llaves rechazan esa conversión; que las variables locales sin inicializador no empiezan automáticamente en cero; y que los decimales de punto flotante pueden ser aproximados.
 

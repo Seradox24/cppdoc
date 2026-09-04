@@ -46,11 +46,13 @@ export const cppActivities = [
     slug: 'funciones-y-flujo-de-ejecucion',
     title: 'Funciones y flujo de ejecución',
     description: 'Organizar instrucciones y seguir su orden de ejecución.',
+    ready: true,
   },
   {
     slug: 'asignacion-y-operadores',
     title: 'Asignación de variables y operadores',
     description: 'Cambiar valores y construir expresiones.',
+    ready: true,
   },
   {
     slug: 'entrada-y-salida',

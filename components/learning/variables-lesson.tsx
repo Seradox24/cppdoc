@@ -8,12 +8,8 @@ import {
   Check,
   CircleHelp,
   Coins,
-  Copy,
   Lightbulb,
-  Play,
   RotateCcw,
-  Terminal,
-  TriangleAlert,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -267,122 +263,6 @@ function TypeExplorer({
   );
 }
 
-function ExecutionLab({ example }: { example: VariableExample }) {
-  const { lines: executionLines, steps: executionSteps, type } = example;
-  const [step, setStep] = useState(0);
-  const current = executionSteps[step];
-  return (
-    <div className="var-lab var-execution">
-      <div className="var-lab-bar">
-        <span>
-          <Play size={17} /> Sigue la ejecución
-        </span>
-        <span>Paso {step} de 4</span>
-      </div>
-      <div className="var-execution-grid">
-        <div className="var-instructions">
-          <span className="var-mini-label">INSTRUCCIONES DENTRO DE main()</span>
-          <ol className="var-code-steps">
-            {executionLines.map((line, index) => (
-              <li
-                key={line}
-                className={
-                  step === index + 1
-                    ? 'is-current'
-                    : step > index + 1
-                      ? 'is-executed'
-                      : ''
-                }
-                aria-current={step === index + 1 ? 'step' : undefined}
-              >
-                <span aria-hidden="true">{index + 1}</span>
-                <code>{line}</code>
-                {step === index + 1 && (
-                  <ArrowLeft size={15} aria-hidden="true" />
-                )}
-              </li>
-            ))}
-          </ol>
-          <p className="var-fragment-note">
-            Fragmento de C++. Para usar <code>std::cout</code>, incluye{' '}
-            <code>{'<iostream>'}</code>.
-            {type.id === 'string' && (
-              <>
-                {' '}
-                Para <code>std::string</code>, incluye también{' '}
-                <code>{'<string>'}</code>.
-              </>
-            )}{' '}
-            Más abajo tienes el programa completo.
-          </p>
-        </div>
-        <div className="var-execution-state">
-          <div className={`var-memory-cell ${step === 0 ? 'is-empty' : ''}`}>
-            <span className="var-mini-label">ESTADO DE LA VARIABLE</span>
-            <div>
-              <code>{type.label}</code>
-              <strong>{type.name}</strong>
-            </div>
-            <output aria-label={`Valor actual de ${type.name}`}>
-              {current.value ?? '—'}
-            </output>
-            <span>
-              {step === 0 ? 'Todavía no existe' : 'Mismo nombre · mismo tipo'}
-            </span>
-          </div>
-          <div className="var-console">
-            <span>
-              <Terminal size={14} /> Consola
-            </span>
-            <output aria-label="Salida de la consola">
-              {current.output || (
-                <span className="var-no-output">Todavía no hay salida.</span>
-              )}
-            </output>
-          </div>
-        </div>
-      </div>
-      <div className="var-step-explanation" aria-live="polite">
-        <strong>{current.title}</strong>
-        <p>{current.explanation}</p>
-      </div>
-      <div className="var-step-controls">
-        <Button
-          variant="ghost"
-          onClick={() => setStep(0)}
-          disabled={step === 0}
-        >
-          <RotateCcw size={15} /> Reiniciar
-        </Button>
-        <div>
-          <Button
-            variant="outline"
-            onClick={() => setStep((value) => value - 1)}
-            disabled={step === 0}
-          >
-            <ArrowLeft size={15} /> Anterior
-          </Button>
-          <Button
-            onClick={() => setStep((value) => value + 1)}
-            disabled={step === 4}
-          >
-            {step === 0
-              ? 'Ejecutar primera línea'
-              : step === 4
-                ? 'Ejecución terminada'
-                : 'Siguiente línea'}
-            <ArrowRight size={15} />
-          </Button>
-        </div>
-      </div>
-      <p className="var-simulation-note">
-        Simulación didáctica de estas cuatro instrucciones. Los controles no
-        compilan C++.
-      </p>
-    </div>
-  );
-}
-
 function VariablesQuiz({ example }: { example: VariableExample }) {
   const { questions } = example;
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -476,8 +356,8 @@ function VariablesQuiz({ example }: { example: VariableExample }) {
         </div>
         {solved === questions.length && (
           <p className="var-quiz-success">
-            <Check size={18} /> ¡Los cuatro resueltos! Ya distingues tipo,
-            asignación y constantes con {example.type.label}.
+            <Check size={18} /> ¡Los cuatro resueltos! Ya reconoces el tipo, el
+            nombre y el literal de {example.type.label}.
           </p>
         )}
         <div className="var-quiz-footer">
@@ -499,47 +379,6 @@ function VariablesQuiz({ example }: { example: VariableExample }) {
           </Button>
         </div>
       </div>
-    </div>
-  );
-}
-
-function CompleteExample({ example }: { example: VariableExample }) {
-  const { program: completeProgram } = example;
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>(
-    'idle',
-  );
-  async function copyCode() {
-    try {
-      await navigator.clipboard.writeText(completeProgram);
-      setCopyState('copied');
-    } catch {
-      setCopyState('error');
-    }
-  }
-  return (
-    <div className="var-full-example">
-      <div className="var-code-header">
-        <span>main.cpp · Programa completo</span>
-        <Button variant="ghost" onClick={copyCode}>
-          {copyState === 'copied' ? <Check size={15} /> : <Copy size={15} />}
-          {copyState === 'copied' ? 'Copiado' : 'Copiar código'}
-        </Button>
-      </div>
-      <pre>
-        <code>{completeProgram}</code>
-      </pre>
-      <div className="var-console">
-        <span>
-          <Terminal size={14} /> Salida esperada
-        </span>
-        <output>{example.output}</output>
-      </div>
-      {copyState === 'error' && (
-        <p className="var-copy-feedback" aria-live="polite">
-          No se pudo copiar. Puedes seleccionar el código y copiarlo
-          manualmente.
-        </p>
-      )}
     </div>
   );
 }
@@ -592,79 +431,26 @@ function VariableExplanation({
         <aside className="var-note">
           <CircleHelp size={20} />
           <p>
-            <strong>El tipo se mantiene.</strong> La variable{' '}
-            <code>{type.name}</code> sigue siendo <code>{type.label}</code>{' '}
-            cuando cambia su valor. Elegir otro tipo en el selector carga un
-            ejemplo diferente; no transforma el tipo de esta variable durante la
-            ejecución.
+            <strong>Cada ejemplo tiene su propio tipo.</strong> Elegir otra
+            opción en el selector carga una variable diferente. No transforma
+            una variable existente de un tipo a otro.
           </p>
         </aside>
       </section>
       <section
-        id="paso-a-paso"
+        id="detalles-tipo"
         className="var-section"
-        aria-labelledby="var-execution-title"
+        aria-labelledby="var-habits-title"
       >
         <div className="var-section-heading">
           <span>02</span>
           <div>
-            <h2 id="var-execution-title">
-              El valor cambia, la variable sigue ahí
-            </h2>
-            <p>
-              Programar es dar instrucciones con un orden. A esa secuencia de
-              pasos para resolver una tarea la llamamos{' '}
-              <strong>algoritmo</strong>. {example.introduction}
-            </p>
-          </div>
-        </div>
-        <ExecutionLab key={exampleKey} example={example} />
-        <div className="var-three-ideas">
-          <div>
-            <span>CREAR · {type.label}</span>
-            <code>{declaration}</code>
-            <p>
-              Declaramos el nombre y el tipo, y lo{' '}
-              <strong>inicializamos</strong> con <code>{literal}</code>.
-            </p>
-          </div>
-          <div>
-            <span>CAMBIAR · {type.label}</span>
-            <code>{example.lines[1]}</code>
-            <p>
-              <strong>Asignamos</strong> <code>{example.assignedLiteral}</code>{' '}
-              a la variable que ya existe.
-            </p>
-          </div>
-          <div>
-            <span>LEER · {type.label}</span>
-            <code>{example.lines[3]}</code>
-            <p>Consultamos su valor para mostrarlo, sin cambiarlo.</p>
-          </div>
-        </div>
-        <aside className="var-note">
-          <Lightbulb size={20} />
-          <p>
-            <code>{example.lines[2]}</code>
-            <br />
-            {example.operationNote} Aquí <code>=</code> significa{' '}
-            <strong>asignar</strong>. Para comparar igualdad se usa{' '}
-            <code>==</code>; lo veremos en operadores.
-          </p>
-        </aside>
-      </section>
-      <section className="var-section" aria-labelledby="var-habits-title">
-        <div className="var-section-heading">
-          <span>
-            <TriangleAlert size={20} />
-          </span>
-          <div>
             <h2 id="var-habits-title">
-              Cuatro detalles al trabajar con <code>{type.label}</code>
+              Cómo se representa <code>{type.label}</code>
             </h2>
             <p>
-              Las reglas de inicialización y los errores frecuentes también
-              dependen del tipo de dato.
+              Cada tipo escribe sus valores de una forma y tiene errores
+              frecuentes que conviene reconocer.
             </p>
           </div>
         </div>
@@ -705,90 +491,6 @@ function VariableExplanation({
         </div>
         <VariablesQuiz key={exampleKey} example={example} />
       </section>
-      <section className="var-section" aria-labelledby="var-program-title">
-        <div className="var-section-heading">
-          <span>
-            <Terminal size={20} />
-          </span>
-          <div>
-            <h2 id="var-program-title">
-              Tu ejemplo de <code>{type.label}</code>, listo para compilar
-            </h2>
-            <p>
-              Este programa completo usa el mismo valor inicial y las mismas
-              instrucciones del paso a paso. Puedes copiarlo en un archivo{' '}
-              <code>main.cpp</code> y compilarlo con un compilador de C++.
-            </p>
-          </div>
-        </div>
-        <CompleteExample key={exampleKey} example={example} />
-        <dl className="var-code-guide">
-          <div>
-            <dt>
-              <code>#include</code>
-            </dt>
-            <dd>
-              La cabecera <code>iostream</code> permite escribir en la consola.
-              {type.id === 'string' && (
-                <>
-                  {' '}
-                  También incluimos <code>string</code> para usar{' '}
-                  <code>std::string</code>.
-                </>
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>
-              <code>main()</code>
-            </dt>
-            <dd>
-              Es el punto de entrada de este programa. Su <code>int</code> es el
-              tipo de su resultado; la variable del ejemplo sigue siendo{' '}
-              <code>{type.label}</code>. <code>return 0;</code> indica que
-              terminó correctamente.
-            </dd>
-          </div>
-          <div>
-            <dt>
-              <code>std::cout</code>
-            </dt>
-            <dd>
-              Envía el valor de <code>{type.name}</code> a la consola.{' '}
-              <code>{"'\\n'"}</code> añade un salto de línea.
-              {type.id === 'bool' && (
-                <>
-                  {' '}
-                  Usamos <code>std::boolalpha</code> para mostrar{' '}
-                  <code>true</code> o <code>false</code>.
-                </>
-              )}
-              {(type.id === 'float' || type.id === 'double') && (
-                <>
-                  {' '}
-                  La consola puede omitir ceros finales; el tipo de la variable
-                  no cambia.
-                </>
-              )}
-            </dd>
-          </div>
-        </dl>
-        <div className="var-next-concept">
-          <Lightbulb size={22} />
-          <div>
-            <h3>Después: reunir estas instrucciones en una función</h3>
-            <p>
-              Una función reúne instrucciones bajo un nombre. Puede recibir
-              datos como <code>{type.name}</code>, hacer una tarea y devolver un
-              resultado. Lo veremos en su propia actividad.
-            </p>
-            <Link href="/cpp/funciones-y-flujo-de-ejecucion">
-              Funciones y flujo de ejecución <ArrowRight size={14} />
-              <span>Contenido pendiente</span>
-            </Link>
-          </div>
-        </div>
-      </section>
     </>
   );
 }
@@ -824,12 +526,13 @@ export function VariablesLesson() {
           </h1>
           <p>
             Una cantidad de monedas. Un nombre. Una respuesta de sí o no.
-            Aprende a guardar estos datos y observa qué ocurre cuando cambian.
+            Aprende qué tipos puede usar C++ para representar cada clase de
+            dato.
           </p>
         </header>
         <nav className="var-page-nav" aria-label="En esta lección">
           <a href="#explorar-tipos">01 · Explorar tipos</a>
-          <a href="#paso-a-paso">02 · Seguir los cambios</a>
+          <a href="#detalles-tipo">02 · Entender cada tipo</a>
           <a href="#practicar">03 · Practicar</a>
         </nav>
         <section
@@ -882,8 +585,8 @@ export function VariablesLesson() {
           </a>
         </div>
         <p className="var-linked-note">
-          El tipo y el valor inicial se comparten con todos los ejemplos. Al
-          cambiarlos, la ejecución y los ejercicios comienzan de nuevo.
+          El tipo y el valor inicial se comparten con la explicación y los
+          ejercicios de esta página.
         </p>
         <VariableExplanation example={example} exampleKey={exampleKey} />
         <div className="var-takeaway">
@@ -900,7 +603,8 @@ export function VariablesLesson() {
             Lección adaptada del material compartido sobre programación y la
             cartera, ampliada con ejemplos de C++ estándar. Los laboratorios son
             simulaciones educativas; no ejecutan un compilador ni necesitan
-            Unreal Engine.
+            Unreal Engine. Los cambios posteriores del valor se estudian en
+            “Asignación y operadores”.
           </p>
           <ul>
             <li>
@@ -951,7 +655,7 @@ export function VariablesLesson() {
           </Link>
           <Link className="next-activity" href={activities[index + 1].href}>
             <span>
-              <small>SIGUIENTE ACTIVIDAD · PENDIENTE</small>
+              <small>SIGUIENTE ACTIVIDAD</small>
               <strong>{activities[index + 1].title}</strong>
             </span>
             <ArrowRight size={18} />

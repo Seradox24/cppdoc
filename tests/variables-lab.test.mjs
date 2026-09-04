@@ -17,7 +17,7 @@ const defaults = [
 ];
 
 for (const [type, expected, output] of defaults) {
-  test(`${type}: declaración, pasos y programa comparten los mismos datos`, () => {
+  test(`${type}: literal, declaración y ejemplo generado comparten los datos`, () => {
     const example = createVariableExample(type, defaultLabValues);
     assert.equal(example.literal, expected[0]);
     assert.deepEqual(
@@ -44,10 +44,10 @@ for (const [type, expected, output] of defaults) {
     );
     assert.equal(
       example.questions[1].choices[example.questions[1].answer],
-      expected[1],
+      expected[0],
     );
     assert.ok(example.habits[0].code.includes(example.declaration));
-    assert.ok(example.habits[1].code.includes(`const ${example.type.label}`));
+    assert.ok(example.habits[1].code.includes(example.declaration));
   });
 }
 

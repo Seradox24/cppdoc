@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
+import { AssignmentOperatorsLesson } from '@/components/learning/assignment-operators-lesson';
 import { PendingLesson } from '@/components/learning/course-pages';
+import { FunctionFlowLesson } from '@/components/learning/function-flow-lesson';
 import { VariablesLesson } from '@/components/learning/variables-lesson';
 import { VariableFormatLesson } from '@/components/learning/variable-format-lesson';
 import { cppActivities, lessons } from '@/lib/lessons';
@@ -34,6 +36,12 @@ export default async function CppActivityPage({ params }: Props) {
   }
   if (lesson.id === 'cpp-formato-de-variables') {
     return <VariableFormatLesson />;
+  }
+  if (lesson.id === 'cpp-funciones-y-flujo-de-ejecucion') {
+    return <FunctionFlowLesson />;
+  }
+  if (lesson.id === 'cpp-asignacion-y-operadores') {
+    return <AssignmentOperatorsLesson />;
   }
   return <PendingLesson lesson={lesson} />;
 }
